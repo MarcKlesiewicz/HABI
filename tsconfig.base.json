@@ -14,7 +14,10 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@habi/feature-dashboard": ["libs/feature-dashboard/src/index.ts"],
+      "@habi/lib-layout": ["libs/lib-layout/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
