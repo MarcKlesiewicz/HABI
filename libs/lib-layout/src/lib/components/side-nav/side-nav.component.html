@@ -1,14 +1,25 @@
-<div class="min-w-[254px] h-screen bg-white flex flex-col">
-  <div class="bg-red-400 text-center text-2xl py-4">HABI</div>
-  <div class="bg-blue-950 grow">
+<div class="min-w-[254px] h-screen navbar-bg flex flex-col">
+  <div class="text-center text-2xl py-4 flex items-center justify-center gap-2">
+    <div class="material-icons-outlined bg-primary p-2 text-neutral rounded-lg">
+      mood
+    </div>
+    <p class="font-bold">HABI</p>
+  </div>
+  <div class="grow border-neutral">
     <ul class="min-h-full">
-      <li class="bg-blue-200 m-2 rounded p-2 items-center flex gap-2">
-        <span class="material-icons-outlined">dashboard</span>
-        <a class="font-bold" href="#">Dashboard</a>
+      @for (menuItem of sideNavMenuItems; track $index) {
+
+      <li
+        class="mx-2 mb-1 rounded p-2 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
+        routerLinkActive="router-link-active"
+      >
+        <span class="material-icons-outlined">{{ menuItem.icon }}</span>
+        <a [routerLink]="menuItem.route">{{ menuItem.label }}</a>
       </li>
+      }
     </ul>
   </div>
-  <div class="bg-green-900">SETTINGS</div>
+  <div class="py-4 bg-green-900">SETTINGS</div>
 </div>
 
 <!-- <div class="drawer lg:drawer-open">

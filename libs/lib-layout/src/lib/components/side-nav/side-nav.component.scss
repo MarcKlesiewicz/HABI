@@ -1,0 +1,8 @@
+.navbar-bg {
+  background-color: #17171c;
+}
+
+.router-link-active {
+  background-color: oklch(var(--p) / 0.2);
+  color: var(--p);
+}
