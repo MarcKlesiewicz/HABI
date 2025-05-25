@@ -1,8 +1,22 @@
-.navbar-bg {
+.collapseable-sidenav {
   background-color: #17171c;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  width: 250px; // expanded width
+
+  &.collapsed {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    border: none;
+  }
 }
 
 .router-link-active {
   background-color: oklch(var(--p) / 0.2);
-  color: var(--p);
+  color: oklch(var(--p));
+
+  .label {
+    color: #93c5fd;
+  }
 }

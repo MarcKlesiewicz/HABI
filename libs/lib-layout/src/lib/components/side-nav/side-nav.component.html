@@ -1,42 +1,33 @@
-<div class="min-w-[254px] h-screen navbar-bg flex flex-col">
+<div
+  class="collapseable-sidenav h-screen flex flex-col border-neutral/20 border-r"
+  [class.collapsed]="!sideNavToggle()"
+>
   <div class="text-center text-2xl py-4 flex items-center justify-center gap-2">
     <div class="material-icons-outlined bg-primary p-2 text-neutral rounded-lg">
       mood
     </div>
     <p class="font-bold">HABI</p>
   </div>
-  <div class="grow border-neutral">
+  <div class="grow border-neutral/20 border-y pt-3">
     <ul class="min-h-full">
       @for (menuItem of sideNavMenuItems; track $index) {
 
       <li
-        class="mx-2 mb-1 rounded p-2 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
-        routerLinkActive="router-link-active"
+        class="mx-2 mb-1 rounded-lg p-2 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
+        routerLinkActive="router-link-active "
       >
         <span class="material-icons-outlined">{{ menuItem.icon }}</span>
-        <a [routerLink]="menuItem.route">{{ menuItem.label }}</a>
+        <a class="label" [routerLink]="menuItem.route">{{ menuItem.label }}</a>
       </li>
       }
     </ul>
   </div>
-  <div class="py-4 bg-green-900">SETTINGS</div>
-</div>
-
-<!-- <div class="drawer lg:drawer-open">
-  <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
-  <div class="drawer-side">
-    <label
-      for="my-drawer-2"
-      aria-label="close sidebar"
-      class="drawer-overlay"
-    ></label>
-
-    <ul class="menu bg-base-200 text-base-content min-h-full w-80">
-      <div class="p-2 bg-primary text-center text-2xl">HABI</div>
-
-   
-      <li><a>Sidebar Item 1</a></li>
-      <li><a>Sidebar Item 2</a></li>
-    </ul>
+  <div class="py-4">
+    <div
+      class="mx-2 mb-1 rounded-lg p-3 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
+    >
+      <span class="material-icons-outlined">settings</span>
+      <a>Settings</a>
+    </div>
   </div>
-</div> -->
+</div>

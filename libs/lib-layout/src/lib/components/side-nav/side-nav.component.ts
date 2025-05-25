@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -9,6 +9,8 @@ import { RouterModule } from '@angular/router';
   styleUrl: './side-nav.component.scss',
 })
 export class SideNavComponent {
+  sideNavToggle = input<boolean>();
+
   readonly sideNavMenuItems: SideNavMenuItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
     { label: 'Todo List', icon: 'checklist_rtl', route: '/todolist' },
