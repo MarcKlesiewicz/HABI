@@ -16,6 +16,9 @@
     "baseUrl": ".",
     "paths": {
       "@habi/feature-dashboard": ["libs/feature-dashboard/src/index.ts"],
+      "@habi/feature-habit-tracker": [
+        "libs/feature-habit-tracker/src/index.ts"
+      ],
       "@habi/lib-layout": ["libs/lib-layout/src/index.ts"]
     }
   },

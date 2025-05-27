@@ -16,7 +16,7 @@ export class SideNavComponent {
     { label: 'Todo List', icon: 'checklist_rtl', route: '/todolist' },
     { label: 'Calendar', icon: 'calendar_today', route: '/calendar' },
     { label: 'Cookbook', icon: 'auto_stories', route: '/cookbook' },
-    { label: 'Habits', icon: 'auto_graph', route: '/habits' },
+    { label: 'Habits', icon: 'auto_graph', route: '/habit-tracker' },
     { label: 'Household', icon: 'cottage', route: '/household' },
     { label: 'Inventory', icon: 'inventory_2', route: '/inventory' },
   ];

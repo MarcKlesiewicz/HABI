@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { HeaderComponent } from '../components/header/header.component';
 import { SideNavComponent } from '../components/side-nav/side-nav.component';
 
 @Component({
   selector: 'lib-layout',
-  imports: [CommonModule, SideNavComponent, HeaderComponent],
+  imports: [CommonModule, SideNavComponent, HeaderComponent, RouterModule],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })

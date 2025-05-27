@@ -1,8 +1,11 @@
 <div class="flex flex-row">
   <lib-side-nav [sideNavToggle]="sideNavToggle()"></lib-side-nav>
-  <lib-header
-    [title]="title()"
-    [(sideNavToggle)]="sideNavToggle"
-    class="grow bg-slate-400"
-  ></lib-header>
+  <div class="flex flex-col w-full">
+    <lib-header
+      [title]="title()"
+      [(sideNavToggle)]="sideNavToggle"
+      class="flex-none"
+    ></lib-header>
+    <router-outlet class="grow"></router-outlet>
+  </div>
 </div>
