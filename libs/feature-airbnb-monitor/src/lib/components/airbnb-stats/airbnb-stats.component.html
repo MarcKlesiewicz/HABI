@@ -1,20 +1,20 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
   <flash-card
-    mainText="2"
+    [mainText]="totalBookings().toString()"
     category="Total bookings"
     icon="nights_stay"
     iconColor="text-primary-500"
     iconBgColor="bg-primary-100/30"
   ></flash-card>
   <flash-card
-    mainText="1"
+    [mainText]="completedBookings().toString()"
     category="Completed Stays"
     icon="verified"
     iconColor="text-secondary-500"
     iconBgColor="bg-secondary-100/30"
   ></flash-card>
   <flash-card
-    mainText="7.500 kr."
+    [mainText]="totalRevenue().toString() + ' Kr.'"
     category="Total earnings"
     icon="attach_money"
     iconColor="text-accent-500"

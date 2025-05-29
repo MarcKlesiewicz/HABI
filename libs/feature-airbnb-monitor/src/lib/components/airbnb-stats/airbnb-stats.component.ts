@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FlashCardComponent } from '@habi/lib-shared';
 
 @Component({
@@ -8,4 +8,8 @@ import { FlashCardComponent } from '@habi/lib-shared';
   templateUrl: './airbnb-stats.component.html',
   styleUrl: './airbnb-stats.component.scss',
 })
-export class AirbnbStatsComponent {}
+export class AirbnbStatsComponent {
+  totalBookings = input.required<number>();
+  completedBookings = input.required<number>();
+  totalRevenue = input.required<number>();
+}

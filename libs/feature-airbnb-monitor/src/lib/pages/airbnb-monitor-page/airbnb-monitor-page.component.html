@@ -5,10 +5,14 @@
       Track your Airbnb bookings and manage guest turnover
     </p>
   </div>
-  <lib-airbnb-stats></lib-airbnb-stats>
+  <lib-airbnb-stats
+    [totalBookings]="totalBookings()"
+    [completedBookings]="completedBookings()"
+    [totalRevenue]="totalRevenue()"
+  ></lib-airbnb-stats>
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2">
-      <lib-upcoming-bookings [bookings]="bookings$"></lib-upcoming-bookings>
+      <lib-upcoming-bookings [bookings]="bookings()"></lib-upcoming-bookings>
     </div>
     <div class="space-y-6"></div>
   </div>
