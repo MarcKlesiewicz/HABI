@@ -1,0 +1,47 @@
+<div class="base-card">
+  <div class="flex items-start justify-between">
+    <div>
+      <div class="flex items-center gap-2">
+        <div class="avatar placeholder">
+          <div
+            class="text-primary-content w-8 rounded-full"
+            [ngStyle]="{ 'background-color': avatarColor() }"
+          >
+            <span>{{ booking().initials }}</span>
+          </div>
+        </div>
+        <h3 class="font-medium">{{ booking().guestName }}</h3>
+        <!-- <span
+              class="text-xs px-2 py-0.5 rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300"
+              >Confirmed</span
+            > -->
+      </div>
+      <p class="text-sm text-neutral-400 mt-1">
+        ID: {{ booking().confirmationCode }}
+      </p>
+    </div>
+    <div class="text-right">
+      <div class="font-medium">{{ booking().earnings }} DKK</div>
+      <div class="text-sm text-neutral-400">
+        {{ booking().numberOfNights }} @if (booking().numberOfNights > 1) {
+        nights } @else { night }
+      </div>
+    </div>
+  </div>
+  <div class="mt-4 flex flex-wrap gap-4 text-sm">
+    <div class="flex items-center gap-1 text-neutral-400">
+      <span class="material-icons-outlined"> event </span>
+      <span
+        >{{ booking().checkInDate | date : 'MMM d' }} -
+        {{ booking().checkOutDate | date }}</span
+      >
+    </div>
+    <div class="flex items-center gap-1 text-neutral-400">
+      <span class="material-icons-outlined text"> people </span
+      ><span
+        >{{ booking().numberOfGuests }} @if (booking().numberOfGuests > 1) {
+        guests } @else { guest }
+      </span>
+    </div>
+  </div>
+</div>

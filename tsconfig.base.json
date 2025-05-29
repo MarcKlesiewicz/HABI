@@ -22,8 +22,8 @@
       "@habi/feature-habit-tracker": [
         "libs/feature-habit-tracker/src/index.ts"
       ],
-      "@habi/lib-shared": ["libs/lib-shared/src/index.ts"],
-      "@habi/lib-layout": ["libs/lib-layout/src/index.ts"]
+      "@habi/lib-layout": ["libs/lib-layout/src/index.ts"],
+      "@habi/lib-shared": ["libs/lib-shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -8,3 +8,7 @@ body {
   color: #ffffff;
   background-color: #18181b;
 }
+
+.base-card {
+  @apply bg-neutral rounded-xl p-4 border border-neutral-600;
+}
