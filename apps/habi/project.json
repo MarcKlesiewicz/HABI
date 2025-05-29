@@ -20,6 +20,11 @@
           {
             "glob": "**/*",
             "input": "apps/habi/public"
+          },
+          {
+            "glob": "**/*",
+            "input": "shared/svgs",
+            "output": "shared/svgs"
           }
         ],
         "styles": ["shared/styles/global.scss"],

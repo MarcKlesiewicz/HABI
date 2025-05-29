@@ -18,7 +18,7 @@ export class SideNavComponent {
     { label: 'Cookbook', icon: 'auto_stories', route: '/cookbook' },
     { label: 'Habits', icon: 'auto_graph', route: '/habit-tracker' },
     { label: 'Household', icon: 'cottage', route: '/household' },
-    { label: 'Inventory', icon: 'inventory_2', route: '/inventory' },
+    { label: 'Airbnb Monitor', icon: 'nights_stay', route: '/airbnb-monitor' },
   ];
 }
 

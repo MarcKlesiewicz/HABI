@@ -15,10 +15,14 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@habi/feature-airbnb-monitor": [
+        "libs/feature-airbnb-monitor/src/index.ts"
+      ],
       "@habi/feature-dashboard": ["libs/feature-dashboard/src/index.ts"],
       "@habi/feature-habit-tracker": [
         "libs/feature-habit-tracker/src/index.ts"
       ],
+      "@habi/lib-shared": ["libs/lib-shared/src/index.ts"],
       "@habi/lib-layout": ["libs/lib-layout/src/index.ts"]
     }
   },

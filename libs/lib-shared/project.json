@@ -1,0 +1,19 @@
+{
+  "name": "flash-card",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/lib-shared/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/lib-shared",
+        "main": "libs/lib-shared/src/index.ts",
+        "tsConfig": "libs/lib-shared/tsconfig.lib.json",
+        "assets": ["libs/lib-shared/*.md"]
+      }
+    }
+  }
+}

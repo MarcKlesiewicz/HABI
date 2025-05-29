@@ -1,0 +1,17 @@
+<div class="bg-neutral rounded-xl p-4 border border-neutral-600">
+  <div class="flex items-center gap-3">
+    <div
+      class="p-3 h-12 w-12 rounded-full flex justify-center items-center
+      {{ iconBgColor() }}
+      {{ iconColor() }}"
+    >
+      <span class="material-icons-outlined">{{ icon() }}</span>
+    </div>
+    <div>
+      <div class="text-2xl font-semibold">{{ mainText() }}</div>
+      <div class="text-sm text-neutral-400">
+        {{ category() }}
+      </div>
+    </div>
+  </div>
+</div>
