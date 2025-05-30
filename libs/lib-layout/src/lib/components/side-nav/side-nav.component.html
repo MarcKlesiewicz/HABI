@@ -1,32 +1,38 @@
-<div
-  class="collapseable-sidenav h-screen flex flex-col border-neutral/50 border-r"
-  [class.collapsed]="!sideNavToggle()"
->
-  <div class="text-center text-2xl py-4 flex items-center justify-center gap-2">
-    <img class="h-10" src="/shared/svgs/habi_logo.svg" />
-
-    <p class="font-bold">HABI</p>
-  </div>
-  <div class="grow border-neutral/50 border-y pt-3">
-    <ul class="min-h-full">
-      @for (menuItem of sideNavMenuItems; track $index) {
-
-      <li
-        class="mx-2 mb-1 rounded-lg p-2 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
-        routerLinkActive="router-link-active "
-      >
-        <span class="material-icons-outlined">{{ menuItem.icon }}</span>
-        <a class="label" [routerLink]="menuItem.route">{{ menuItem.label }}</a>
-      </li>
-      }
-    </ul>
-  </div>
-  <div class="py-4">
+<div class="fixed md:relative z-20 h-full w-64">
+  <div
+    class="collapseable-sidenav h-screen flex flex-col border-neutral/50 border-r"
+    [class.collapsed]="!sideNavToggle()"
+  >
     <div
-      class="mx-2 mb-1 rounded-lg p-3 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
+      class="text-center text-2xl py-4 flex items-center justify-center gap-2"
     >
-      <span class="material-icons-outlined">settings</span>
-      <a>Settings</a>
+      <img class="h-10" src="/shared/svgs/habi_logo.svg" />
+
+      <p class="font-bold">HABI</p>
+    </div>
+    <div class="grow border-neutral/50 border-y pt-3">
+      <ul class="min-h-full">
+        @for (menuItem of sideNavMenuItems; track $index) {
+
+        <li
+          class="mx-2 mb-1 rounded-lg p-2 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
+          routerLinkActive="router-link-active "
+        >
+          <span class="material-icons-outlined">{{ menuItem.icon }}</span>
+          <a class="label" [routerLink]="menuItem.route">{{
+            menuItem.label
+          }}</a>
+        </li>
+        }
+      </ul>
+    </div>
+    <div class="py-4">
+      <div
+        class="mx-2 mb-1 rounded-lg p-3 items-center flex gap-2 hover:bg-white/20 cursor-pointer"
+      >
+        <span class="material-icons-outlined">settings</span>
+        <a>Settings</a>
+      </div>
     </div>
   </div>
 </div>

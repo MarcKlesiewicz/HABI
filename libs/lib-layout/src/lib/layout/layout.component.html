@@ -1,11 +1,15 @@
-<div class="flex flex-row">
+<div class="flex flex-row h-screen overflow-hidden">
   <lib-side-nav [sideNavToggle]="sideNavToggle()"></lib-side-nav>
   <div class="flex flex-col w-full h-full">
-    <lib-header
-      [title]="title()"
-      [(sideNavToggle)]="sideNavToggle"
-      class="flex-none"
-    ></lib-header>
-    <router-outlet class="flex-1 p-4 md:p-6"></router-outlet>
+    <header class="sticky top-0 z-10 transition-all duration-300">
+      <lib-header
+        [title]="title()"
+        [(sideNavToggle)]="sideNavToggle"
+        class="flex-none"
+      ></lib-header>
+    </header>
+    <main class="flex-1 overflow-auto">
+      <router-outlet class="flex-1 p-4 md:p-6"></router-outlet>
+    </main>
   </div>
 </div>
