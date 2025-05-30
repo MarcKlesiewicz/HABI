@@ -1,4 +1,4 @@
-<div class="base-card">
+<div [ngClass]="isActive() ? 'active-booking' : 'base-card'">
   <div class="flex items-start justify-between">
     <div>
       <div class="flex items-center gap-2">

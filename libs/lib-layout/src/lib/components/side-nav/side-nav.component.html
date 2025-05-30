@@ -1,5 +1,5 @@
 <div
-  class="collapseable-sidenav h-screen flex flex-col border-neutral/20 border-r"
+  class="collapseable-sidenav h-screen flex flex-col border-neutral/50 border-r"
   [class.collapsed]="!sideNavToggle()"
 >
   <div class="text-center text-2xl py-4 flex items-center justify-center gap-2">
@@ -7,7 +7,7 @@
 
     <p class="font-bold">HABI</p>
   </div>
-  <div class="grow border-neutral/20 border-y pt-3">
+  <div class="grow border-neutral/50 border-y pt-3">
     <ul class="min-h-full">
       @for (menuItem of sideNavMenuItems; track $index) {
 

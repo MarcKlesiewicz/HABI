@@ -1,8 +1,13 @@
 <div class="base-card" style="opacity: 1; transform: none">
-  <h2 class="text-xl font-display font-semibold mb-4">Upcoming Bookings</h2>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-display font-semibold">Upcoming Bookings</h2>
+    <p class="text-neutral-400 text-sm">
+      Next booking @if (daysUntilNextBooking() > 1) { in
+      {{ daysUntilNextBooking() }} days}@else {tommorow}
+    </p>
+  </div>
   <div class="space-y-4">
     @for (booking of bookings(); track $index) {
-
     <lib-booking-card [booking]="booking"></lib-booking-card>
     }
   </div>

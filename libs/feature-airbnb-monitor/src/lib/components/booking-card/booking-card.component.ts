@@ -15,4 +15,12 @@ export class BookingCardComponent {
   avatarColor = computed(() => {
     return stringToHex(this.booking().initials);
   });
+
+  isActive = computed(() => {
+    const today = new Date();
+    return (
+      this.booking().checkInDate <= today &&
+      this.booking().checkOutDate >= today
+    );
+  });
 }

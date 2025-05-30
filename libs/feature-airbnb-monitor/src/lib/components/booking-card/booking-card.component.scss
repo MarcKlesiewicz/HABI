@@ -1,3 +1,7 @@
 :host {
   display: block;
 }
+
+.active-booking {
+  @apply bg-neutral rounded-xl p-4 border-2 border-primary-500;
+}
