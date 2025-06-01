@@ -1,8 +1,10 @@
 <div class="base-card">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-lg font-display font-medium">After Departure</h3>
+    <h3 class="text-lg font-display font-medium">
+      @if (isDepartureChecklist()) { After Departure }@else { Before Arrival }
+    </h3>
     <button
-      class="text-xs px-2 py-1 rounded-full"
+      class="btn btn-xs font-light btn-outline btn-primary"
       data-dashlane-label="true"
       data-dashlane-rid="fc9bb91450411428"
       data-dashlane-classification="other"
@@ -11,7 +13,8 @@
     </button>
   </div>
   <ul class="space-y-2">
-    @for (check of departureChecklist(); track $index) {
+    @if (isDepartureChecklist()) { @for (check of departureChecklist(); track
+    $index) {
 
     <li class="flex items-start gap-2">
       <button class="mt-1 flex-shrink-0">
@@ -22,6 +25,24 @@
         /></button
       ><span class="">{{ check }}</span>
     </li>
-    }
+    } }@else { @for (check of arrivalChecklist(); track $index) {
+    <li class="flex items-start gap-2">
+      <button class="mt-1 flex-shrink-0">
+        <input
+          type="checkbox"
+          checked="checked"
+          class="checkbox checkbox-sm rounded-sm"
+        /></button
+      ><span class="">{{ check }}</span>
+    </li>
+    } }
   </ul>
+  <div class="divider"></div>
+  <button
+    class="btn btn-block btn-outline btn-sm"
+    (click)="isDepartureChecklist.set(!isDepartureChecklist())"
+  >
+    <span class="material-icons-outlined"> swap_horiz </span> Swap to @if
+    (isDepartureChecklist()) { arrival } @else { departure }
+  </button>
 </div>
