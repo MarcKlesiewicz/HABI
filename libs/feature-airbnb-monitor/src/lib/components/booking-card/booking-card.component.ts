@@ -16,11 +16,16 @@ export class BookingCardComponent {
     return stringToHex(this.booking().initials);
   });
 
-  isActive = computed(() => {
+  status = computed(() => {
     const today = new Date();
-    return (
-      this.booking().checkInDate <= today &&
-      this.booking().checkOutDate >= today
-    );
+    if (this.booking().checkInDate > today) {
+      return 'Upcoming' as BookingStatus;
+    } else if (this.booking().checkOutDate < today) {
+      return 'Completed' as BookingStatus;
+    } else {
+      return 'Active' as BookingStatus;
+    }
   });
 }
+
+type BookingStatus = 'Upcoming' | 'Active' | 'Completed';

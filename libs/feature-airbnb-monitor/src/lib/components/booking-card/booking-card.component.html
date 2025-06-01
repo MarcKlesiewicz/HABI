@@ -1,4 +1,4 @@
-<div [ngClass]="isActive() ? 'active-booking' : 'base-card'">
+<div [ngClass]="status() === 'Active' ? 'active-booking' : 'base-card'">
   <div class="flex items-start justify-between">
     <div>
       <div class="flex items-center gap-2">
@@ -11,10 +11,13 @@
           </div>
         </div>
         <h3 class="font-medium">{{ booking().guestName }}</h3>
-        <!-- <span
-              class="text-xs px-2 py-0.5 rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300"
-              >Confirmed</span
-            > -->
+        <div
+          class="badge"
+          [class.badge-primary]="status() === 'Active'"
+          [class.badge-accent]="status() === 'Completed'"
+        >
+          {{ status() }}
+        </div>
       </div>
       <p class="text-sm text-neutral-400 mt-1">
         ID: {{ booking().confirmationCode }}
