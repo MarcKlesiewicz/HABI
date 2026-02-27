@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habi/config/routes/routes.dart';
-import 'package:habi/config/theme/theme.dart';
-import 'package:habi/config/theme/text_theme.dart';
+import 'package:habi/config/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,16 +13,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // final brightness = View.of(context).platformDispatcher.platformBrightness;
 
-    TextTheme textTheme = createTextTheme(
-      context,
-      "Inter",
-      "Atkinson Hyperlegible",
-    );
-
-    MaterialTheme theme = MaterialTheme(textTheme);
     return MaterialApp.router(
       title: 'Flutter Demo',
-      theme: theme.light(),
+      theme: AppTheme.lightTheme, // Light mode theme
+      darkTheme: AppTheme.darkTheme, // Dark mode theme
+      themeMode: ThemeMode.system, // Follows system setting
       routerConfig: router,
     );
   }

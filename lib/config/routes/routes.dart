@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:habi/features/airbnb/airbnb_page.dart';
-import 'package:habi/features/dashboard/dashboard_page.dart';
+import 'package:habi/features/dashboard/pages/dashboard_page.dart';
 import 'package:habi/shared/widgets/shell_layout.dart';
 
 final router = GoRouter(

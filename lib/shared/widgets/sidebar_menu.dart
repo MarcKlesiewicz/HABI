@@ -1,33 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habi/config/routes/routes.dart';
+import 'package:habi/config/theme/theme_extensions.dart';
+import 'package:habi/shared/widgets/glass_container.dart';
 
 class SidebarMenu extends StatelessWidget {
   const SidebarMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 80,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 16,
-        children: [
-          GestureDetector(
-            onTap: () => context.go(AppRoutePath.dashboard),
-            child: Icon(Icons.dashboard, color: Colors.white),
-          ),
-          GestureDetector(
-            onTap: () => context.go(AppRoutePath.airbnb),
-            child: Icon(Icons.settings, color: Colors.white),
-          ),
-          Icon(Icons.person, color: Colors.white),
-        ],
+    return GlassContainer(
+      child: Container(
+        width: 80,
+        height: double.infinity,
+        padding: context.paddingMD,
+        child: Column(
+          children: [
+            SvgPicture.asset('lib/assets/svg/habi_logo.svg', height: 50),
+            const SizedBox(height: 32),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => context.go(AppRoutePath.dashboard),
+                    icon: Icon(
+                      Icons.dashboard,
+                      color: context.colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  IconButton(
+                    onPressed: () => context.go(AppRoutePath.airbnb),
+                    icon: Icon(
+                      Icons.home,
+                      color: context.colorScheme.secondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
