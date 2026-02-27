@@ -15,6 +15,7 @@ class GlassContainer extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           decoration: BoxDecoration(
+            color: Colors.white30,
             borderRadius: context.radiusSM,
             border: Border.all(
               color: Color.fromRGBO(255, 255, 255, 0.2),

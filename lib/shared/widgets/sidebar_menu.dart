@@ -11,39 +11,32 @@ class SidebarMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      child: Container(
-        width: 80,
+      child: SizedBox(
         height: double.infinity,
-        padding: context.paddingMD,
         child: Column(
           children: [
             SvgPicture.asset('lib/assets/svg/habi_logo.svg', height: 50),
             const SizedBox(height: 32),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => context.go(AppRoutePath.dashboard),
-                    icon: Icon(
-                      Icons.dashboard,
-                      color: context.colorScheme.secondary,
-                    ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                IconButton(
+                  onPressed: () => context.go(AppRoutePath.dashboard),
+                  icon: Icon(
+                    Icons.dashboard,
+                    color: context.colorScheme.secondary,
                   ),
-                  const SizedBox(height: 16),
-                  IconButton(
-                    onPressed: () => context.go(AppRoutePath.airbnb),
-                    icon: Icon(
-                      Icons.home,
-                      color: context.colorScheme.secondary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                IconButton(
+                  onPressed: () => context.go(AppRoutePath.airbnb),
+                  icon: Icon(Icons.home, color: context.colorScheme.secondary),
+                ),
+              ],
             ),
           ],
         ),
-      ),
+      ).paddingAll(8),
     );
   }
 }

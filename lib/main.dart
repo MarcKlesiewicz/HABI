@@ -11,13 +11,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final brightness = View.of(context).platformDispatcher.platformBrightness;
-
     return MaterialApp.router(
       title: 'Flutter Demo',
-      theme: AppTheme.lightTheme, // Light mode theme
-      darkTheme: AppTheme.darkTheme, // Dark mode theme
-      themeMode: ThemeMode.system, // Follows system setting
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: router,
     );
   }
