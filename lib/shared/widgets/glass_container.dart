@@ -1,30 +1,49 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 
 class GlassContainer extends StatelessWidget {
   final Widget child;
-  const GlassContainer({super.key, required this.child});
+  final bool isElevated;
+
+  const GlassContainer({
+    super.key,
+    required this.child,
+    this.isElevated = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: context.radiusSM,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white30,
-            borderRadius: context.radiusSM,
-            border: Border.all(
-              color: Color.fromRGBO(255, 255, 255, 0.2),
-              width: 2,
-            ),
-          ),
-          child: child,
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: context.colorScheme.surfaceContainer,
+        borderRadius: context.radiusSM,
+        border: Border.all(color: context.colorScheme.outlineVariant),
+        boxShadow: isElevated
+            ? [
+                BoxShadow(
+                  color: context.colorScheme.shadow.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 12),
+                ),
+              ]
+            : null,
       ),
+      child: ClipRRect(borderRadius: context.radiusSM, child: child),
+    );
+  }
+}
+
+class AppSurface extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+
+  const AppSurface({super.key, required this.child, this.padding});
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      isElevated: true,
+      child: Padding(padding: padding ?? context.paddingMD, child: child),
     );
   }
 }

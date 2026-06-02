@@ -428,15 +428,6 @@ class _NextStayPanel extends StatelessWidget {
                       label: 'Booked',
                       value: _formatDate(reservation.bookingDate),
                     ),
-                    _DetailLine(
-                      label: 'Payout',
-                      value:
-                          '${reservation.amount.toStringAsFixed(2)} ${reservation.currency}',
-                    ),
-                    _DetailLine(
-                      label: 'Code',
-                      value: reservation.confirmationCode,
-                    ),
                   ],
                 ),
               ),
@@ -544,11 +535,11 @@ class _PhaseButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isSelected
-              ? context.colorScheme.secondary
-              : context.colorScheme.surface.withValues(alpha: 0.32),
+              ? context.colorScheme.primary
+              : context.colorScheme.surfaceContainerHigh,
           foregroundColor: isSelected
-              ? context.colorScheme.onSecondary
-              : context.colorScheme.secondary,
+              ? context.colorScheme.onPrimary
+              : context.colorScheme.onSurfaceVariant,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: context.radiusSM),
         ),
@@ -557,6 +548,9 @@ class _PhaseButton extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.textTheme.labelMedium?.copyWith(
+            color: isSelected
+                ? context.colorScheme.onPrimary
+                : context.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
           ),
         ),
