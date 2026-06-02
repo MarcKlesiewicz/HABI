@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:habi/features/airbnb/airbnb_page.dart';
+import 'package:habi/features/chores/pages/chores_page.dart';
 import 'package:habi/features/dashboard/pages/dashboard_page.dart';
 import 'package:habi/shared/widgets/shell_layout.dart';
 
@@ -16,6 +17,10 @@ final router = GoRouter(
           path: AppRoutePath.airbnb,
           builder: (context, state) => const AirBnbPage(),
         ),
+        GoRoute(
+          path: AppRoutePath.chores,
+          builder: (context, state) => const ChoresPage(),
+        ),
       ],
     ),
   ],
@@ -24,4 +29,5 @@ final router = GoRouter(
 class AppRoutePath {
   static const String dashboard = '/';
   static const String airbnb = '/airbnb';
+  static const String chores = '/chores';
 }

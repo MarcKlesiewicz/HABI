@@ -32,6 +32,14 @@ class SidebarMenu extends StatelessWidget {
                   onPressed: () => context.go(AppRoutePath.airbnb),
                   icon: Icon(Icons.home, color: context.colorScheme.secondary),
                 ),
+                const SizedBox(height: 16),
+                IconButton(
+                  onPressed: () => context.go(AppRoutePath.chores),
+                  icon: Icon(
+                    Icons.cleaning_services,
+                    color: context.colorScheme.secondary,
+                  ),
+                ),
               ],
             ),
           ],
