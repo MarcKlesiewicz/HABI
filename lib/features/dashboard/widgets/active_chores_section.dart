@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:habi/config/routes/routes.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
@@ -12,7 +14,10 @@ class ActiveChoresSection extends StatelessWidget {
     return AnimatedBuilder(
       animation: ChoreStore.instance,
       builder: (context, _) {
-        final chores = ChoreStore.instance.activeChores;
+        final chores = ChoreStore.instance.chores;
+        final todayChores = _todayChores(chores);
+        final overdueChores = _overdueChores(chores);
+        final attentionCount = todayChores.length + overdueChores.length;
 
         return GlassContainer(
           child: Padding(
@@ -24,7 +29,7 @@ class ActiveChoresSection extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Active Chores',
+                        'Today\'s Chores',
                         style: context.textTheme.titleLarge?.copyWith(
                           color: context.colorScheme.secondary,
                           fontWeight: FontWeight.bold,
@@ -32,7 +37,7 @@ class ActiveChoresSection extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      chores.length.toString(),
+                      attentionCount.toString(),
                       style: context.textTheme.titleMedium?.copyWith(
                         color: context.colorScheme.secondary,
                         fontWeight: FontWeight.bold,
@@ -40,12 +45,19 @@ class ActiveChoresSection extends StatelessWidget {
                     ),
                   ],
                 ),
+                context.gapXS,
+                Text(
+                  'What needs attention today',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 context.gapMD,
-                if (chores.isEmpty)
+                if (attentionCount == 0)
                   Expanded(
                     child: Center(
                       child: Text(
-                        'No active chores',
+                        'No chores due today',
                         style: context.textTheme.bodyMedium?.copyWith(
                           color: context.colorScheme.onSurfaceVariant,
                         ),
@@ -54,14 +66,47 @@ class ActiveChoresSection extends StatelessWidget {
                   )
                 else
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: chores.length,
-                      separatorBuilder: (_, _) => context.gapSM,
-                      itemBuilder: (context, index) {
-                        return _ActiveChoreTile(chore: chores[index]);
-                      },
+                    child: ListView(
+                      children: [
+                        if (overdueChores.isNotEmpty) ...[
+                          _SectionLabel(
+                            label: 'Overdue',
+                            count: overdueChores.length,
+                          ),
+                          context.gapSM,
+                          ...overdueChores.expand((chore) {
+                            return [
+                              _TodayChoreTile(chore: chore, isOverdue: true),
+                              context.gapSM,
+                            ];
+                          }),
+                          context.gapSM,
+                        ],
+                        if (todayChores.isNotEmpty) ...[
+                          _SectionLabel(
+                            label: 'Today',
+                            count: todayChores.length,
+                          ),
+                          context.gapSM,
+                          ...todayChores.expand((chore) {
+                            return [
+                              _TodayChoreTile(chore: chore),
+                              context.gapSM,
+                            ];
+                          }),
+                        ],
+                      ],
                     ),
                   ),
+                context.gapSM,
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.go(AppRoutePath.chores),
+                    icon: const Icon(Icons.open_in_new, size: 16),
+                    label: const Text('Open chore manager'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -71,10 +116,40 @@ class ActiveChoresSection extends StatelessWidget {
   }
 }
 
-class _ActiveChoreTile extends StatelessWidget {
-  final Chore chore;
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final int count;
 
-  const _ActiveChoreTile({required this.chore});
+  const _SectionLabel({required this.label, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: context.textTheme.labelLarge?.copyWith(
+            color: context.colorScheme.secondary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        context.gapSM,
+        Text(
+          count.toString(),
+          style: context.textTheme.bodySmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TodayChoreTile extends StatelessWidget {
+  final Chore chore;
+  final bool isOverdue;
+
+  const _TodayChoreTile({required this.chore, this.isOverdue = false});
 
   @override
   Widget build(BuildContext context) {
@@ -87,11 +162,15 @@ class _ActiveChoreTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: context.colorScheme.secondary.withValues(alpha: 0.18),
+                color: isOverdue
+                    ? context.colorScheme.errorContainer
+                    : context.colorScheme.primary.withValues(alpha: 0.22),
                 borderRadius: context.radiusSM,
               ),
               child: Icon(
-                Icons.checklist,
+                chore.type == ChoreType.recurring
+                    ? Icons.event_repeat
+                    : Icons.task_alt,
                 size: 20,
                 color: context.colorScheme.secondary,
               ),
@@ -112,7 +191,10 @@ class _ActiveChoreTile extends StatelessWidget {
                   Text(
                     '${chore.scheduleLabel} - ${chore.assignedTo} - ${_formatDue(chore.nextDue)}',
                     style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
+                      color: isOverdue
+                          ? context.colorScheme.error
+                          : context.colorScheme.onSurfaceVariant,
+                      fontWeight: isOverdue ? FontWeight.bold : null,
                     ),
                   ),
                 ],
@@ -135,11 +217,55 @@ class _ActiveChoreTile extends StatelessWidget {
                 ),
               ),
             ),
+            context.gapSM,
+            IconButton(
+              tooltip: 'Mark completed',
+              onPressed: () => ChoreStore.instance.completeChore(chore.id),
+              icon: const Icon(Icons.check_circle_outline),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+List<Chore> _todayChores(List<Chore> chores) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  return chores
+      .where((chore) {
+        if (!_isDashboardCandidate(chore)) return false;
+        final due = chore.nextDue;
+        if (due == null) return false;
+        final dueDay = DateTime(due.year, due.month, due.day);
+        return dueDay.isAtSameMomentAs(today);
+      })
+      .toList(growable: false)
+    ..sort(_compareDue);
+}
+
+List<Chore> _overdueChores(List<Chore> chores) {
+  final now = DateTime.now();
+  return chores
+      .where((chore) {
+        if (!_isDashboardCandidate(chore)) return false;
+        return chore.isOverdue(now);
+      })
+      .toList(growable: false)
+    ..sort(_compareDue);
+}
+
+bool _isDashboardCandidate(Chore chore) {
+  return chore.isActive &&
+      !chore.isDone &&
+      chore.type != ChoreType.unscheduled &&
+      chore.nextDue != null;
+}
+
+int _compareDue(Chore a, Chore b) {
+  return a.nextDue!.compareTo(b.nextDue!);
 }
 
 String _formatDue(DateTime? date) {
