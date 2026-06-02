@@ -110,7 +110,7 @@ class _ActiveChoreTile extends StatelessWidget {
                   ),
                   context.gapXS,
                   Text(
-                    '${chore.cadence} - ${chore.assignedTo} - due ${chore.nextDue.day}/${chore.nextDue.month}',
+                    '${chore.scheduleLabel} - ${chore.assignedTo} - due ${chore.nextDue.day}/${chore.nextDue.month}',
                     style: context.textTheme.bodySmall?.copyWith(
                       color: context.colorScheme.onSurfaceVariant,
                     ),
