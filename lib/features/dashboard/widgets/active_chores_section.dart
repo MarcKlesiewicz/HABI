@@ -110,7 +110,7 @@ class _ActiveChoreTile extends StatelessWidget {
                   ),
                   context.gapXS,
                   Text(
-                    '${chore.scheduleLabel} - ${chore.assignedTo} - due ${chore.nextDue.day}/${chore.nextDue.month}',
+                    '${chore.scheduleLabel} - ${chore.assignedTo} - ${_formatDue(chore.nextDue)}',
                     style: context.textTheme.bodySmall?.copyWith(
                       color: context.colorScheme.onSurfaceVariant,
                     ),
@@ -140,4 +140,9 @@ class _ActiveChoreTile extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatDue(DateTime? date) {
+  if (date == null) return 'no due date';
+  return 'due ${date.day}/${date.month}';
 }
