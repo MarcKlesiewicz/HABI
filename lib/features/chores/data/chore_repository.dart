@@ -120,6 +120,16 @@ Chore _choreFromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
     isDone: data['isDone'] as bool? ?? false,
     lastCompletedAt: _dateTimeFromTimestamp(data['lastCompletedAt']),
     createdAt: _dateTimeFromTimestamp(data['createdAt']) ?? DateTime.now(),
+    iconKey: _knownValue(
+      data['iconKey'],
+      recurringChoreIconKeys,
+      defaultRecurringChoreIconKey,
+    ),
+    colorKey: _knownValue(
+      data['colorKey'],
+      recurringChoreColorKeys,
+      defaultRecurringChoreColorKey,
+    ),
   );
 }
 
@@ -137,6 +147,8 @@ Map<String, dynamic> _choreToDocument(Chore chore) {
     'isDone': chore.isDone,
     'lastCompletedAt': _timestampFromDateTime(chore.lastCompletedAt),
     'createdAt': _timestampFromDateTime(chore.createdAt),
+    'iconKey': chore.iconKey,
+    'colorKey': chore.colorKey,
   };
 }
 

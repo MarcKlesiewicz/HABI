@@ -20,6 +20,74 @@ const choreAreas = <String>[
   'Garage',
 ];
 
+const defaultRecurringChoreIconKey = 'event_repeat';
+const defaultRecurringChoreColorKey = 'primary';
+
+const recurringChoreIconKeys = <String>[
+  defaultRecurringChoreIconKey,
+  'alarm',
+  'auto_awesome',
+  'bathtub',
+  'bed',
+  'build',
+  'calendar_month',
+  'car_repair',
+  'check_circle',
+  'delete_outline',
+  'directions_car',
+  'dishwasher',
+  'dry_cleaning',
+  'electrical_services',
+  'emoji_nature',
+  'event_available',
+  'favorite',
+  'fire_extinguisher',
+  'fitness_center',
+  'garage',
+  'handyman',
+  'heat_pump',
+  'home',
+  'iron',
+  'lightbulb',
+  'local_laundry_service',
+  'local_shipping',
+  'lock',
+  'mop',
+  'outdoor_grill',
+  'pets',
+  'plumbing',
+  'recycling',
+  'roofing',
+  'schedule',
+  'security',
+  'shopping_cart',
+  'shower',
+  'smoke_free',
+  'spa',
+  'sprinkler',
+  'thermostat',
+  'vacuum',
+  'wb_sunny',
+  'weekend',
+  'cleaning_services',
+  'local_florist',
+  'water_drop',
+  'kitchen',
+  'grass',
+  'home_repair_service',
+];
+
+const recurringChoreColorKeys = <String>[
+  defaultRecurringChoreColorKey,
+  'green',
+  'blue',
+  'amber',
+  'pink',
+  'teal',
+  'purple',
+  'red',
+];
+
 class RecurrenceRule {
   final RecurrenceFrequency frequency;
   final int interval;
@@ -163,6 +231,8 @@ class Chore {
   final bool isDone;
   final DateTime? lastCompletedAt;
   final DateTime createdAt;
+  final String iconKey;
+  final String colorKey;
 
   const Chore({
     required this.id,
@@ -178,6 +248,8 @@ class Chore {
     required this.isDone,
     this.lastCompletedAt,
     required this.createdAt,
+    this.iconKey = defaultRecurringChoreIconKey,
+    this.colorKey = defaultRecurringChoreColorKey,
   });
 
   String get scheduleLabel {
@@ -223,6 +295,8 @@ class Chore {
     DateTime? lastCompletedAt,
     bool clearLastCompletedAt = false,
     DateTime? createdAt,
+    String? iconKey,
+    String? colorKey,
   }) {
     return Chore(
       id: id ?? this.id,
@@ -240,6 +314,8 @@ class Chore {
           ? null
           : lastCompletedAt ?? this.lastCompletedAt,
       createdAt: createdAt ?? this.createdAt,
+      iconKey: iconKey ?? this.iconKey,
+      colorKey: colorKey ?? this.colorKey,
     );
   }
 }

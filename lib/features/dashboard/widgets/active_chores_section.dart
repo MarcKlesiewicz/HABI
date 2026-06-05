@@ -6,6 +6,7 @@ import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
+import 'package:habi/features/chores/presentation/chore_visuals.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
 
 class ActiveChoresSection extends ConsumerWidget {
@@ -175,12 +176,17 @@ class _TodayChoreTile extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: isOverdue
                     ? context.colorScheme.errorContainer
+                    : chore.type == ChoreType.recurring
+                    ? recurringChoreColor(
+                        context,
+                        chore.colorKey,
+                      ).withValues(alpha: 0.22)
                     : context.colorScheme.primary.withValues(alpha: 0.22),
                 borderRadius: context.radiusSM,
               ),
               child: Icon(
                 chore.type == ChoreType.recurring
-                    ? Icons.event_repeat
+                    ? recurringChoreIcon(chore.iconKey)
                     : Icons.task_alt,
                 size: 20,
                 color: context.colorScheme.secondary,

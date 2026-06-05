@@ -4,6 +4,7 @@ import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
+import 'package:habi/features/chores/presentation/chore_visuals.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
 
 enum _ChoreView { due, todos, recurring, areas }
@@ -460,11 +461,14 @@ class _ChoreTile extends ConsumerWidget {
                     ? context.colorScheme.errorContainer
                     : chore.type == ChoreType.todo
                     ? context.colorScheme.surfaceContainerHigh
-                    : context.colorScheme.primary.withValues(alpha: 0.2),
+                    : recurringChoreColor(
+                        context,
+                        chore.colorKey,
+                      ).withValues(alpha: 0.2),
                 borderRadius: context.radiusSM,
               ),
               child: Icon(switch (chore.type) {
-                ChoreType.recurring => Icons.event_repeat,
+                ChoreType.recurring => recurringChoreIcon(chore.iconKey),
                 ChoreType.todo =>
                   chore.nextDue == null ? Icons.inventory_2 : Icons.task_alt,
               }, color: context.colorScheme.secondary),
@@ -586,9 +590,10 @@ class _TypePill extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: switch (chore.type) {
-          ChoreType.recurring => context.colorScheme.primary.withValues(
-            alpha: 0.2,
-          ),
+          ChoreType.recurring => recurringChoreColor(
+            context,
+            chore.colorKey,
+          ).withValues(alpha: 0.2),
           ChoreType.todo =>
             chore.nextDue == null
                 ? context.colorScheme.secondaryContainer
@@ -714,6 +719,16 @@ Future<void> _showChoreDialog(
     choreOwners,
     unassignedChoreOwner,
   );
+  var iconKey = _optionOrDefault(
+    chore?.iconKey,
+    recurringChoreIconKeys,
+    defaultRecurringChoreIconKey,
+  );
+  var colorKey = _optionOrDefault(
+    chore?.colorKey,
+    recurringChoreColorKeys,
+    defaultRecurringChoreColorKey,
+  );
   var dueDate = chore?.nextDue ?? DateTime.now();
   var hasDueDate = chore?.nextDue != null || type == ChoreType.recurring;
 
@@ -790,6 +805,17 @@ Future<void> _showChoreDialog(
                       },
                     ),
                     if (type == ChoreType.recurring) ...[
+                      context.gapMD,
+                      _RecurringVisualEditor(
+                        iconKey: iconKey,
+                        colorKey: colorKey,
+                        onIconChanged: (value) {
+                          setDialogState(() => iconKey = value);
+                        },
+                        onColorChanged: (value) {
+                          setDialogState(() => colorKey = value);
+                        },
+                      ),
                       context.gapMD,
                       _RecurrenceRuleEditor(
                         rule: recurrenceRule,
@@ -899,6 +925,12 @@ Future<void> _showChoreDialog(
                         ? false
                         : chore?.isDone ?? false,
                     createdAt: chore?.createdAt ?? DateTime.now(),
+                    iconKey: type == ChoreType.recurring
+                        ? iconKey
+                        : defaultRecurringChoreIconKey,
+                    colorKey: type == ChoreType.recurring
+                        ? colorKey
+                        : defaultRecurringChoreColorKey,
                   );
 
                   if (isEditing) {
@@ -953,6 +985,70 @@ class _DateButton extends StatelessWidget {
         ),
         context.gapSM,
         trailing!,
+      ],
+    );
+  }
+}
+
+class _RecurringVisualEditor extends StatelessWidget {
+  final String iconKey;
+  final String colorKey;
+  final ValueChanged<String> onIconChanged;
+  final ValueChanged<String> onColorChanged;
+
+  const _RecurringVisualEditor({
+    required this.iconKey,
+    required this.colorKey,
+    required this.onIconChanged,
+    required this.onColorChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        DropdownButtonFormField<String>(
+          initialValue: iconKey,
+          decoration: const InputDecoration(labelText: 'Icon'),
+          items: recurringChoreIconKeys.map((value) {
+            return DropdownMenuItem(
+              value: value,
+              child: Center(child: Icon(recurringChoreIcon(value), size: 20)),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            onIconChanged(value);
+          },
+        ).expanded(),
+        context.gapSM,
+        DropdownButtonFormField<String>(
+          initialValue: colorKey,
+          decoration: const InputDecoration(labelText: 'Color'),
+          items: recurringChoreColorKeys.map((value) {
+            return DropdownMenuItem(
+              value: value,
+              child: Row(
+                children: [
+                  Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: recurringChoreColor(context, value),
+                      borderRadius: context.radiusXS,
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.spacingSM),
+                  Text(recurringChoreColorLabel(value)),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            onColorChanged(value);
+          },
+        ).expanded(),
       ],
     );
   }
