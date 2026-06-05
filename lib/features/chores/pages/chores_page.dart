@@ -502,13 +502,13 @@ class _ChoreTile extends ConsumerWidget {
                       _ChoreMeta(icon: Icons.person, label: chore.assignedTo),
                       _ChoreMeta(
                         icon: Icons.calendar_today,
-                        label: _formatDueDate(chore.nextDue),
+                        label: _dateMetaLabel(chore),
                         isEmphasized: overdue,
                       ),
                       if (isRecurring)
                         _ChoreMeta(
                           icon: Icons.schedule,
-                          label: chore.recurrence ?? 'Recurring',
+                          label: chore.scheduleLabel,
                         ),
                       if (isRecurring)
                         _ChoreMeta(
@@ -704,12 +704,10 @@ Future<void> _showChoreDialog(
 }) async {
   final isEditing = chore != null;
   final titleController = TextEditingController(text: chore?.title ?? '');
-  final recurrenceController = TextEditingController(
-    text: chore?.recurrence ?? '',
-  );
-  var type = chore?.type ?? ChoreType.recurring;
+  var type = chore?.type ?? ChoreType.todo;
   var recurrenceBehavior =
       chore?.recurrenceBehavior ?? RecurrenceBehavior.fixed;
+  var recurrenceRule = chore?.recurrenceRule ?? defaultRecurrenceRule;
   var area = _optionOrDefault(chore?.area, choreAreas, defaultChoreArea);
   var assignedTo = _optionOrDefault(
     chore?.assignedTo,
@@ -717,7 +715,7 @@ Future<void> _showChoreDialog(
     unassignedChoreOwner,
   );
   var dueDate = chore?.nextDue ?? DateTime.now();
-  var hasDueDate = chore?.nextDue != null || chore?.type == ChoreType.recurring;
+  var hasDueDate = chore?.nextDue != null || type == ChoreType.recurring;
 
   await showDialog<void>(
     context: context,
@@ -740,18 +738,21 @@ Future<void> _showChoreDialog(
                     Row(
                       children: [
                         _DialogTypeButton(
-                          label: 'Recurring',
-                          isSelected: type == ChoreType.recurring,
-                          onPressed: () {
-                            setDialogState(() => type = ChoreType.recurring);
-                          },
-                        ).expanded(),
-                        context.gapSM,
-                        _DialogTypeButton(
                           label: 'Todo',
                           isSelected: type == ChoreType.todo,
                           onPressed: () {
                             setDialogState(() => type = ChoreType.todo);
+                          },
+                        ).expanded(),
+                        context.gapSM,
+                        _DialogTypeButton(
+                          label: 'Recurring',
+                          isSelected: type == ChoreType.recurring,
+                          onPressed: () {
+                            setDialogState(() {
+                              type = ChoreType.recurring;
+                              hasDueDate = true;
+                            });
                           },
                         ).expanded(),
                       ],
@@ -790,12 +791,11 @@ Future<void> _showChoreDialog(
                     ),
                     if (type == ChoreType.recurring) ...[
                       context.gapMD,
-                      TextField(
-                        controller: recurrenceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Recurrence',
-                          hintText: 'Weekly, Every 3 days, Monthly...',
-                        ),
+                      _RecurrenceRuleEditor(
+                        rule: recurrenceRule,
+                        onChanged: (value) {
+                          setDialogState(() => recurrenceRule = value);
+                        },
                       ),
                       context.gapMD,
                       Row(
@@ -829,46 +829,37 @@ Future<void> _showChoreDialog(
                     ],
                     if (type == ChoreType.recurring || hasDueDate) ...[
                       context.gapMD,
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text('Due ${_formatDueDate(dueDate)}'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () async {
-                              final selectedDate = await showDatePicker(
-                                context: context,
-                                initialDate: dueDate,
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime(2035),
-                              );
-                              if (selectedDate == null) return;
-                              setDialogState(() => dueDate = selectedDate);
-                            },
-                            icon: const Icon(Icons.calendar_today, size: 16),
-                            label: const Text('Pick date'),
-                          ),
-                          if (type == ChoreType.todo)
-                            IconButton(
-                              tooltip: 'Remove due date',
-                              onPressed: () {
-                                setDialogState(() => hasDueDate = false);
-                              },
-                              icon: const Icon(Icons.clear),
-                            ),
-                        ],
+                      _DateButton(
+                        label: type == ChoreType.recurring
+                            ? 'Next due ${_formatDueDate(dueDate)}'
+                            : 'Due ${_formatDueDate(dueDate)}',
+                        onPressed: () async {
+                          final selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: dueDate,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2035),
+                          );
+                          if (selectedDate == null) return;
+                          setDialogState(() => dueDate = selectedDate);
+                        },
+                        trailing: type == ChoreType.todo
+                            ? IconButton(
+                                tooltip: 'Remove due date',
+                                onPressed: () {
+                                  setDialogState(() => hasDueDate = false);
+                                },
+                                icon: const Icon(Icons.clear),
+                              )
+                            : null,
                       ),
                     ] else ...[
                       context.gapMD,
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            setDialogState(() => hasDueDate = true);
-                          },
-                          icon: const Icon(Icons.calendar_today, size: 16),
-                          label: const Text('Add due date'),
-                        ),
+                      _DateButton(
+                        label: 'Add due date',
+                        onPressed: () {
+                          setDialogState(() => hasDueDate = true);
+                        },
                       ),
                     ],
                   ],
@@ -883,18 +874,20 @@ Future<void> _showChoreDialog(
               FilledButton(
                 onPressed: () {
                   final title = titleController.text.trim();
-                  final recurrence = recurrenceController.text.trim();
 
                   if (title.isEmpty) return;
+                  final savedRecurrenceRule = recurrenceRule.normalized();
 
                   final savedChore = Chore(
                     id: chore?.id ?? nextChoreId(),
                     title: title,
                     area: area,
                     type: type,
-                    recurrence:
-                        type == ChoreType.recurring && recurrence.isNotEmpty
-                        ? recurrence
+                    recurrence: type == ChoreType.recurring
+                        ? savedRecurrenceRule.label
+                        : null,
+                    recurrenceRule: type == ChoreType.recurring
+                        ? savedRecurrenceRule
                         : null,
                     recurrenceBehavior: recurrenceBehavior,
                     assignedTo: assignedTo,
@@ -923,6 +916,179 @@ Future<void> _showChoreDialog(
       );
     },
   );
+}
+
+class _DateButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final Widget? trailing;
+
+  const _DateButton({
+    required this.label,
+    required this.onPressed,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (trailing == null) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onPressed,
+          icon: const Icon(Icons.calendar_today, size: 16),
+          label: Text(label),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: onPressed,
+            icon: const Icon(Icons.calendar_today, size: 16),
+            label: Text(label),
+          ),
+        ),
+        context.gapSM,
+        trailing!,
+      ],
+    );
+  }
+}
+
+class _RecurrenceRuleEditor extends StatelessWidget {
+  final RecurrenceRule rule;
+  final ValueChanged<RecurrenceRule> onChanged;
+
+  const _RecurrenceRuleEditor({required this.rule, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = rule.normalized();
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            DropdownButtonFormField<RecurrenceFrequency>(
+              initialValue: normalized.frequency,
+              decoration: const InputDecoration(labelText: 'Repeats'),
+              items: RecurrenceFrequency.values.map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text(_frequencyLabel(value)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                onChanged(_ruleForFrequency(value, normalized));
+              },
+            ).expanded(),
+            context.gapSM,
+            DropdownButtonFormField<int>(
+              initialValue: normalized.interval,
+              decoration: const InputDecoration(labelText: 'Every'),
+              items: _numberOptions(1, 12).map((value) {
+                return DropdownMenuItem(value: value, child: Text('$value'));
+              }).toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                onChanged(normalized.copyWith(interval: value));
+              },
+            ).expanded(),
+          ],
+        ),
+        if (normalized.frequency == RecurrenceFrequency.weekly) ...[
+          context.gapMD,
+          DropdownButtonFormField<int>(
+            initialValue: normalized.weekday ?? DateTime.monday,
+            decoration: const InputDecoration(labelText: 'Weekday'),
+            items: _weekdays.map((value) {
+              return DropdownMenuItem(
+                value: value,
+                child: Text(weekdayLabel(value)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value == null) return;
+              onChanged(normalized.copyWith(weekday: value));
+            },
+          ),
+        ],
+        if (normalized.frequency == RecurrenceFrequency.monthly) ...[
+          context.gapMD,
+          DropdownButtonFormField<MonthlyRecurrenceKind>(
+            initialValue:
+                normalized.monthlyKind ?? MonthlyRecurrenceKind.dayOfMonth,
+            decoration: const InputDecoration(labelText: 'Monthly rule'),
+            items: MonthlyRecurrenceKind.values.map((value) {
+              return DropdownMenuItem(
+                value: value,
+                child: Text(_monthlyKindLabel(value)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value == null) return;
+              onChanged(_ruleForMonthlyKind(value, normalized));
+            },
+          ),
+          context.gapMD,
+          if ((normalized.monthlyKind ?? MonthlyRecurrenceKind.dayOfMonth) ==
+              MonthlyRecurrenceKind.dayOfMonth)
+            DropdownButtonFormField<int>(
+              initialValue: normalized.dayOfMonth ?? 1,
+              decoration: const InputDecoration(labelText: 'Day of month'),
+              items: _numberOptions(1, 31).map((value) {
+                return DropdownMenuItem(value: value, child: Text('$value'));
+              }).toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                onChanged(normalized.copyWith(dayOfMonth: value));
+              },
+            )
+          else
+            Row(
+              children: [
+                if (normalized.monthlyKind ==
+                    MonthlyRecurrenceKind.nthWeekday) ...[
+                  DropdownButtonFormField<int>(
+                    initialValue: normalized.weekOfMonth ?? 1,
+                    decoration: const InputDecoration(labelText: 'Week'),
+                    items: _numberOptions(1, 4).map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text(_capitalizedOrdinal(value)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      onChanged(normalized.copyWith(weekOfMonth: value));
+                    },
+                  ).expanded(),
+                  context.gapSM,
+                ],
+                DropdownButtonFormField<int>(
+                  initialValue: normalized.weekday ?? DateTime.monday,
+                  decoration: const InputDecoration(labelText: 'Weekday'),
+                  items: _weekdays.map((value) {
+                    return DropdownMenuItem(
+                      value: value,
+                      child: Text(weekdayLabel(value)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    onChanged(normalized.copyWith(weekday: value));
+                  },
+                ).expanded(),
+              ],
+            ),
+        ],
+      ],
+    );
+  }
 }
 
 class _DialogTypeButton extends StatelessWidget {
@@ -992,8 +1158,14 @@ int _compareNullableDates(DateTime? a, DateTime? b) {
   return a.compareTo(b);
 }
 
+String _dateMetaLabel(Chore chore) {
+  if (chore.nextDue == null) return 'No due date';
+  final prefix = chore.type == ChoreType.recurring ? 'Next due' : 'Due';
+  return '$prefix ${_formatDueDate(chore.nextDue)}';
+}
+
 String _formatDueDate(DateTime? date) {
-  if (date == null) return 'No due date';
+  if (date == null) return '';
   return '${date.day}/${date.month}/${date.year}';
 }
 
@@ -1055,4 +1227,89 @@ String _optionOrDefault(
     }
   }
   return fallback;
+}
+
+const _weekdays = <int>[
+  DateTime.monday,
+  DateTime.tuesday,
+  DateTime.wednesday,
+  DateTime.thursday,
+  DateTime.friday,
+  DateTime.saturday,
+  DateTime.sunday,
+];
+
+List<int> _numberOptions(int min, int max) {
+  return [for (var value = min; value <= max; value++) value];
+}
+
+String _frequencyLabel(RecurrenceFrequency frequency) {
+  switch (frequency) {
+    case RecurrenceFrequency.daily:
+      return 'Daily';
+    case RecurrenceFrequency.weekly:
+      return 'Weekly';
+    case RecurrenceFrequency.monthly:
+      return 'Monthly';
+  }
+}
+
+String _monthlyKindLabel(MonthlyRecurrenceKind kind) {
+  switch (kind) {
+    case MonthlyRecurrenceKind.dayOfMonth:
+      return 'Day of month';
+    case MonthlyRecurrenceKind.nthWeekday:
+      return 'Nth weekday';
+    case MonthlyRecurrenceKind.lastWeekday:
+      return 'Last weekday';
+  }
+}
+
+String _capitalizedOrdinal(int value) {
+  final label = ordinalLabel(value);
+  return '${label[0].toUpperCase()}${label.substring(1)}';
+}
+
+RecurrenceRule _ruleForFrequency(
+  RecurrenceFrequency frequency,
+  RecurrenceRule current,
+) {
+  switch (frequency) {
+    case RecurrenceFrequency.daily:
+      return RecurrenceRule.daily(interval: current.interval);
+    case RecurrenceFrequency.weekly:
+      return RecurrenceRule.weekly(
+        interval: current.interval,
+        weekday: current.weekday ?? DateTime.monday,
+      );
+    case RecurrenceFrequency.monthly:
+      return RecurrenceRule.monthlyDay(
+        interval: current.interval,
+        dayOfMonth: current.dayOfMonth ?? 1,
+      );
+  }
+}
+
+RecurrenceRule _ruleForMonthlyKind(
+  MonthlyRecurrenceKind kind,
+  RecurrenceRule current,
+) {
+  switch (kind) {
+    case MonthlyRecurrenceKind.dayOfMonth:
+      return RecurrenceRule.monthlyDay(
+        interval: current.interval,
+        dayOfMonth: current.dayOfMonth ?? 1,
+      );
+    case MonthlyRecurrenceKind.nthWeekday:
+      return RecurrenceRule.monthlyNthWeekday(
+        interval: current.interval,
+        weekOfMonth: current.weekOfMonth ?? 1,
+        weekday: current.weekday ?? DateTime.monday,
+      );
+    case MonthlyRecurrenceKind.lastWeekday:
+      return RecurrenceRule.monthlyLastWeekday(
+        interval: current.interval,
+        weekday: current.weekday ?? DateTime.monday,
+      );
+  }
 }

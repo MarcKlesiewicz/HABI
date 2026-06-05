@@ -2,6 +2,10 @@ enum ChoreType { recurring, todo }
 
 enum RecurrenceBehavior { fixed, flexible }
 
+enum RecurrenceFrequency { daily, weekly, monthly }
+
+enum MonthlyRecurrenceKind { dayOfMonth, nthWeekday, lastWeekday }
+
 const unassignedChoreOwner = 'Unassigned';
 const defaultChoreArea = 'Lykkeh\u00f8j';
 
@@ -16,12 +20,142 @@ const choreAreas = <String>[
   'Garage',
 ];
 
+class RecurrenceRule {
+  final RecurrenceFrequency frequency;
+  final int interval;
+  final int? weekday;
+  final MonthlyRecurrenceKind? monthlyKind;
+  final int? dayOfMonth;
+  final int? weekOfMonth;
+
+  const RecurrenceRule({
+    required this.frequency,
+    this.interval = 1,
+    this.weekday,
+    this.monthlyKind,
+    this.dayOfMonth,
+    this.weekOfMonth,
+  });
+
+  const RecurrenceRule.daily({this.interval = 1})
+    : frequency = RecurrenceFrequency.daily,
+      weekday = null,
+      monthlyKind = null,
+      dayOfMonth = null,
+      weekOfMonth = null;
+
+  const RecurrenceRule.weekly({
+    this.interval = 1,
+    this.weekday = DateTime.monday,
+  }) : frequency = RecurrenceFrequency.weekly,
+       monthlyKind = null,
+       dayOfMonth = null,
+       weekOfMonth = null;
+
+  const RecurrenceRule.monthlyDay({this.interval = 1, this.dayOfMonth = 1})
+    : frequency = RecurrenceFrequency.monthly,
+      weekday = null,
+      monthlyKind = MonthlyRecurrenceKind.dayOfMonth,
+      weekOfMonth = null;
+
+  const RecurrenceRule.monthlyNthWeekday({
+    this.interval = 1,
+    this.weekOfMonth = 1,
+    this.weekday = DateTime.monday,
+  }) : frequency = RecurrenceFrequency.monthly,
+       monthlyKind = MonthlyRecurrenceKind.nthWeekday,
+       dayOfMonth = null;
+
+  const RecurrenceRule.monthlyLastWeekday({
+    this.interval = 1,
+    this.weekday = DateTime.monday,
+  }) : frequency = RecurrenceFrequency.monthly,
+       monthlyKind = MonthlyRecurrenceKind.lastWeekday,
+       dayOfMonth = null,
+       weekOfMonth = null;
+
+  String get label {
+    final cadence = interval == 1 ? 'Every' : 'Every $interval';
+    switch (frequency) {
+      case RecurrenceFrequency.daily:
+        return interval == 1 ? 'Every day' : 'Every $interval days';
+      case RecurrenceFrequency.weekly:
+        final unit = interval == 1 ? 'week' : 'weeks';
+        return '$cadence $unit on ${weekdayLabel(weekday ?? DateTime.monday)}';
+      case RecurrenceFrequency.monthly:
+        final unit = interval == 1 ? 'month' : 'months';
+        switch (monthlyKind ?? MonthlyRecurrenceKind.dayOfMonth) {
+          case MonthlyRecurrenceKind.dayOfMonth:
+            return '$cadence $unit on day ${dayOfMonth ?? 1}';
+          case MonthlyRecurrenceKind.nthWeekday:
+            return '$cadence $unit on the ${ordinalLabel(weekOfMonth ?? 1)} ${weekdayLabel(weekday ?? DateTime.monday)}';
+          case MonthlyRecurrenceKind.lastWeekday:
+            return '$cadence $unit on the last ${weekdayLabel(weekday ?? DateTime.monday)}';
+        }
+    }
+  }
+
+  RecurrenceRule copyWith({
+    RecurrenceFrequency? frequency,
+    int? interval,
+    int? weekday,
+    MonthlyRecurrenceKind? monthlyKind,
+    int? dayOfMonth,
+    int? weekOfMonth,
+  }) {
+    return RecurrenceRule(
+      frequency: frequency ?? this.frequency,
+      interval: interval ?? this.interval,
+      weekday: weekday ?? this.weekday,
+      monthlyKind: monthlyKind ?? this.monthlyKind,
+      dayOfMonth: dayOfMonth ?? this.dayOfMonth,
+      weekOfMonth: weekOfMonth ?? this.weekOfMonth,
+    ).normalized();
+  }
+
+  RecurrenceRule normalized() {
+    final safeInterval = interval < 1 ? 1 : interval;
+    switch (frequency) {
+      case RecurrenceFrequency.daily:
+        return RecurrenceRule.daily(interval: safeInterval);
+      case RecurrenceFrequency.weekly:
+        return RecurrenceRule.weekly(
+          interval: safeInterval,
+          weekday: _clampInt(weekday ?? DateTime.monday, 1, 7),
+        );
+      case RecurrenceFrequency.monthly:
+        final kind = monthlyKind ?? MonthlyRecurrenceKind.dayOfMonth;
+        switch (kind) {
+          case MonthlyRecurrenceKind.dayOfMonth:
+            return RecurrenceRule.monthlyDay(
+              interval: safeInterval,
+              dayOfMonth: _clampInt(dayOfMonth ?? 1, 1, 31),
+            );
+          case MonthlyRecurrenceKind.nthWeekday:
+            return RecurrenceRule.monthlyNthWeekday(
+              interval: safeInterval,
+              weekOfMonth: _clampInt(weekOfMonth ?? 1, 1, 4),
+              weekday: _clampInt(weekday ?? DateTime.monday, 1, 7),
+            );
+          case MonthlyRecurrenceKind.lastWeekday:
+            return RecurrenceRule.monthlyLastWeekday(
+              interval: safeInterval,
+              weekday: _clampInt(weekday ?? DateTime.monday, 1, 7),
+            );
+        }
+    }
+  }
+}
+
+const defaultRecurrenceRule = RecurrenceRule.weekly();
+
 class Chore {
   final String id;
   final String title;
   final String area;
   final ChoreType type;
   final String? recurrence;
+  final RecurrenceRule? recurrenceRule;
   final RecurrenceBehavior recurrenceBehavior;
   final String assignedTo;
   final DateTime? nextDue;
@@ -36,6 +170,7 @@ class Chore {
     required this.area,
     required this.type,
     this.recurrence,
+    this.recurrenceRule,
     this.recurrenceBehavior = RecurrenceBehavior.fixed,
     required this.assignedTo,
     this.nextDue,
@@ -46,7 +181,9 @@ class Chore {
   });
 
   String get scheduleLabel {
-    if (type == ChoreType.recurring) return recurrence ?? 'Recurring';
+    if (type == ChoreType.recurring) {
+      return recurrenceRule?.label ?? recurrence ?? 'Recurring';
+    }
     return nextDue == null ? 'Backlog' : 'Scheduled todo';
   }
 
@@ -76,6 +213,7 @@ class Chore {
     String? area,
     ChoreType? type,
     String? recurrence,
+    RecurrenceRule? recurrenceRule,
     RecurrenceBehavior? recurrenceBehavior,
     String? assignedTo,
     DateTime? nextDue,
@@ -92,6 +230,7 @@ class Chore {
       area: area ?? this.area,
       type: type ?? this.type,
       recurrence: recurrence ?? this.recurrence,
+      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
       recurrenceBehavior: recurrenceBehavior ?? this.recurrenceBehavior,
       assignedTo: assignedTo ?? this.assignedTo,
       nextDue: clearNextDue ? null : nextDue ?? this.nextDue,
@@ -112,6 +251,7 @@ final initialChores = <Chore>[
     area: 'Living Room',
     type: ChoreType.recurring,
     recurrence: 'Every 3 days',
+    recurrenceRule: const RecurrenceRule.daily(interval: 3),
     recurrenceBehavior: RecurrenceBehavior.flexible,
     assignedTo: 'Marc',
     nextDue: DateTime(2026, 6, 3),
@@ -125,6 +265,7 @@ final initialChores = <Chore>[
     area: defaultChoreArea,
     type: ChoreType.recurring,
     recurrence: 'Weekly',
+    recurrenceRule: const RecurrenceRule.weekly(weekday: DateTime.sunday),
     recurrenceBehavior: RecurrenceBehavior.fixed,
     assignedTo: 'Mathilde',
     nextDue: DateTime(2026, 6, 7),
@@ -138,6 +279,7 @@ final initialChores = <Chore>[
     area: 'Kitchen',
     type: ChoreType.recurring,
     recurrence: 'Monthly',
+    recurrenceRule: const RecurrenceRule.monthlyDay(dayOfMonth: 20),
     recurrenceBehavior: RecurrenceBehavior.fixed,
     assignedTo: 'Marc',
     nextDue: DateTime(2026, 6, 20),
@@ -151,6 +293,7 @@ final initialChores = <Chore>[
     area: defaultChoreArea,
     type: ChoreType.recurring,
     recurrence: 'Tuesdays',
+    recurrenceRule: const RecurrenceRule.weekly(weekday: DateTime.tuesday),
     recurrenceBehavior: RecurrenceBehavior.fixed,
     assignedTo: 'Cody',
     nextDue: DateTime(2026, 6, 2),
@@ -218,40 +361,120 @@ class ChoreScheduler {
     final anchor = chore.recurrenceBehavior == RecurrenceBehavior.fixed
         ? chore.nextDue ?? completedAt
         : completedAt;
-    var nextDue = _addRecurrence(anchor, chore.recurrence);
+    var nextDue = _nextFromRule(anchor, chore.recurrenceRule);
 
     if (chore.recurrenceBehavior == RecurrenceBehavior.fixed) {
       while (!nextDue.isAfter(completedAt)) {
-        nextDue = _addRecurrence(nextDue, chore.recurrence);
+        nextDue = _nextFromRule(nextDue, chore.recurrenceRule);
       }
     }
 
     return DateTime(nextDue.year, nextDue.month, nextDue.day);
   }
 
-  DateTime _addRecurrence(DateTime from, String? recurrence) {
-    final rule = recurrence?.toLowerCase().trim() ?? '';
-    if (rule.contains('month')) {
-      return DateTime(from.year, from.month + 1, from.day);
+  DateTime _nextFromRule(DateTime from, RecurrenceRule? rule) {
+    final normalized = (rule ?? defaultRecurrenceRule).normalized();
+    final date = DateTime(from.year, from.month, from.day);
+
+    switch (normalized.frequency) {
+      case RecurrenceFrequency.daily:
+        return date.add(Duration(days: normalized.interval));
+      case RecurrenceFrequency.weekly:
+        final nextWeek = date.add(Duration(days: normalized.interval * 7));
+        return _moveToWeekday(nextWeek, normalized.weekday ?? DateTime.monday);
+      case RecurrenceFrequency.monthly:
+        return _nextMonthlyDate(date, normalized);
     }
-    if (rule.contains('second')) return from.add(const Duration(days: 14));
-    if (rule.contains('week') || rule.endsWith('days')) {
-      final dayMatch = RegExp(r'every (\d+) days?').firstMatch(rule);
-      final days = dayMatch == null ? 7 : int.parse(dayMatch.group(1)!);
-      return from.add(Duration(days: days));
-    }
-    if (rule.contains('day') || rule.contains('daily')) {
-      return from.add(const Duration(days: 1));
-    }
-    if (rule.contains('tuesday') ||
-        rule.contains('monday') ||
-        rule.contains('wednesday') ||
-        rule.contains('thursday') ||
-        rule.contains('friday') ||
-        rule.contains('saturday') ||
-        rule.contains('sunday')) {
-      return from.add(const Duration(days: 7));
-    }
-    return from.add(const Duration(days: 7));
+  }
+}
+
+DateTime _nextMonthlyDate(DateTime from, RecurrenceRule rule) {
+  final targetMonth = DateTime(from.year, from.month + rule.interval, 1);
+  switch (rule.monthlyKind ?? MonthlyRecurrenceKind.dayOfMonth) {
+    case MonthlyRecurrenceKind.dayOfMonth:
+      final day = _clampInt(
+        rule.dayOfMonth ?? 1,
+        1,
+        _daysInMonth(targetMonth.year, targetMonth.month),
+      );
+      return DateTime(targetMonth.year, targetMonth.month, day);
+    case MonthlyRecurrenceKind.nthWeekday:
+      return _nthWeekdayOfMonth(
+        targetMonth.year,
+        targetMonth.month,
+        rule.weekday ?? DateTime.monday,
+        rule.weekOfMonth ?? 1,
+      );
+    case MonthlyRecurrenceKind.lastWeekday:
+      return _lastWeekdayOfMonth(
+        targetMonth.year,
+        targetMonth.month,
+        rule.weekday ?? DateTime.monday,
+      );
+  }
+}
+
+DateTime _moveToWeekday(DateTime date, int weekday) {
+  final offset = (weekday - date.weekday) % 7;
+  return date.add(Duration(days: offset));
+}
+
+DateTime _nthWeekdayOfMonth(int year, int month, int weekday, int weekOfMonth) {
+  final firstDay = DateTime(year, month, 1);
+  final firstWeekday = _moveToWeekday(firstDay, weekday);
+  final candidate = firstWeekday.add(Duration(days: (weekOfMonth - 1) * 7));
+  if (candidate.month == month) return candidate;
+  return _lastWeekdayOfMonth(year, month, weekday);
+}
+
+DateTime _lastWeekdayOfMonth(int year, int month, int weekday) {
+  var day = DateTime(year, month + 1, 0);
+  while (day.weekday != weekday) {
+    day = day.subtract(const Duration(days: 1));
+  }
+  return day;
+}
+
+int _daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
+
+int _clampInt(int value, int min, int max) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+String weekdayLabel(int weekday) {
+  switch (weekday) {
+    case DateTime.monday:
+      return 'Monday';
+    case DateTime.tuesday:
+      return 'Tuesday';
+    case DateTime.wednesday:
+      return 'Wednesday';
+    case DateTime.thursday:
+      return 'Thursday';
+    case DateTime.friday:
+      return 'Friday';
+    case DateTime.saturday:
+      return 'Saturday';
+    case DateTime.sunday:
+      return 'Sunday';
+    default:
+      return 'Monday';
+  }
+}
+
+String ordinalLabel(int value) {
+  switch (value) {
+    case 1:
+      return 'first';
+    case 2:
+      return 'second';
+    case 3:
+      return 'third';
+    case 4:
+      return 'fourth';
+    default:
+      return '${value}th';
   }
 }

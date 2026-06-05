@@ -104,6 +104,7 @@ Chore _choreFromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
     area: _knownValue(data['area'], choreAreas, defaultChoreArea),
     type: _choreTypeFromName(data['type']),
     recurrence: data['recurrence'] as String?,
+    recurrenceRule: _recurrenceRuleFromDocument(data['recurrenceRule']),
     recurrenceBehavior: _enumFromName(
       RecurrenceBehavior.values,
       data['recurrenceBehavior'],
@@ -127,7 +128,8 @@ Map<String, dynamic> _choreToDocument(Chore chore) {
     'title': chore.title,
     'area': chore.area,
     'type': chore.type.name,
-    'recurrence': chore.recurrence,
+    'recurrence': chore.recurrenceRule?.label ?? chore.recurrence,
+    'recurrenceRule': _recurrenceRuleToDocument(chore.recurrenceRule),
     'recurrenceBehavior': chore.recurrenceBehavior.name,
     'assignedTo': chore.assignedTo,
     'nextDue': _timestampFromDateTime(chore.nextDue),
@@ -160,6 +162,53 @@ String _knownValue(Object? value, List<String> allowedValues, String fallback) {
     }
   }
   return fallback;
+}
+
+RecurrenceRule? _recurrenceRuleFromDocument(Object? value) {
+  if (value is! Map) return null;
+  final frequency = _enumFromName(
+    RecurrenceFrequency.values,
+    value['frequency'],
+    RecurrenceFrequency.weekly,
+  );
+  final monthlyKind = _enumFromName(
+    MonthlyRecurrenceKind.values,
+    value['monthlyKind'],
+    MonthlyRecurrenceKind.dayOfMonth,
+  );
+  return RecurrenceRule(
+    frequency: frequency,
+    interval: _intFromValue(value['interval'], 1),
+    weekday: _nullableIntFromValue(value['weekday']),
+    monthlyKind: value['monthlyKind'] == null ? null : monthlyKind,
+    dayOfMonth: _nullableIntFromValue(value['dayOfMonth']),
+    weekOfMonth: _nullableIntFromValue(value['weekOfMonth']),
+  ).normalized();
+}
+
+Map<String, dynamic>? _recurrenceRuleToDocument(RecurrenceRule? rule) {
+  if (rule == null) return null;
+  final normalized = rule.normalized();
+  return {
+    'frequency': normalized.frequency.name,
+    'interval': normalized.interval,
+    'weekday': normalized.weekday,
+    'monthlyKind': normalized.monthlyKind?.name,
+    'dayOfMonth': normalized.dayOfMonth,
+    'weekOfMonth': normalized.weekOfMonth,
+  };
+}
+
+int _intFromValue(Object? value, int fallback) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return fallback;
+}
+
+int? _nullableIntFromValue(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return null;
 }
 
 DateTime? _dateTimeFromTimestamp(Object? value) {
