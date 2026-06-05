@@ -1,33 +1,49 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habi/features/airbnb/airbnb_reservation_store.dart';
 import 'package:habi/features/upcoming_events/data/upcoming_event.dart';
+import 'package:habi/features/upcoming_events/data/upcoming_event_repository.dart';
 
-final upcomingEventsProvider = Provider<List<UpcomingEvent>>((ref) {
-  final now = DateTime.now();
-  final startOfToday = DateTime(now.year, now.month, now.day);
+final upcomingEventRepositoryProvider = Provider<UpcomingEventRepository>((
+  ref,
+) {
+  return createUpcomingEventRepository();
+});
+
+final manualUpcomingEventsProvider = StreamProvider<List<UpcomingEvent>>((ref) {
+  return ref.watch(upcomingEventRepositoryProvider).watchManualEvents();
+});
+
+final calendarEventsProvider = StreamProvider<List<UpcomingEvent>>((ref) {
+  final manualEvents =
+      ref.watch(manualUpcomingEventsProvider).value ?? const [];
 
   final events = <UpcomingEvent>[
-    UpcomingEvent(
-      id: 'birthday-mom-2026',
-      title: 'Moms birthday',
-      startsAt: DateTime(2026, 6, 15, 10),
-      endsAt: DateTime(2026, 6, 15, 11),
-      category: UpcomingEventCategory.birthday,
-    ),
-    UpcomingEvent(
-      id: 'dentist-2026-06-17',
-      title: 'Dentist appointment',
-      startsAt: DateTime(2026, 6, 17, 9),
-      endsAt: DateTime(2026, 6, 17, 9, 30),
-      category: UpcomingEventCategory.appointment,
-    ),
+    ...manualEvents,
     ...AirbnbReservationStore.upcoming.expand(_eventsFromReservation),
   ];
 
-  return events
-      .where((event) => !event.startsAt.isBefore(startOfToday))
-      .toList()
-    ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+  return Stream.value(
+    List<UpcomingEvent>.from(events)
+      ..sort((a, b) => a.startsAt.compareTo(b.startsAt)),
+  );
+});
+
+final upcomingEventsProvider = StreamProvider<List<UpcomingEvent>>((ref) {
+  final events = ref.watch(calendarEventsProvider).value ?? const [];
+  final now = DateTime.now();
+  final startOfToday = DateTime(now.year, now.month, now.day);
+
+  return Stream.value(
+    events
+        .where((event) => !event.startsAt.isBefore(startOfToday))
+        .toList(growable: false),
+  );
+});
+
+final upcomingEventControllerProvider = Provider<UpcomingEventController>((
+  ref,
+) {
+  return UpcomingEventController(ref);
 });
 
 Iterable<UpcomingEvent> _eventsFromReservation(
@@ -42,5 +58,31 @@ Iterable<UpcomingEvent> _eventsFromReservation(
     source: UpcomingEventSource.airbnb,
     category: UpcomingEventCategory.airbnb,
     sourceId: reservation.confirmationCode,
+    createdAt: reservation.bookingDate,
   );
+}
+
+class UpcomingEventController {
+  UpcomingEventController(this._ref);
+
+  final Ref _ref;
+
+  UpcomingEventRepository get _repository =>
+      _ref.read(upcomingEventRepositoryProvider);
+
+  Future<void> createEvent(UpcomingEvent event) {
+    return _repository.createEvent(
+      event.copyWith(source: UpcomingEventSource.manual, clearSourceId: true),
+    );
+  }
+
+  Future<void> updateEvent(UpcomingEvent event) {
+    if (!event.canEdit) return Future.value();
+    return _repository.updateEvent(event);
+  }
+
+  Future<void> deleteEvent(UpcomingEvent event) {
+    if (!event.canEdit) return Future.value();
+    return _repository.deleteEvent(event.id);
+  }
 }

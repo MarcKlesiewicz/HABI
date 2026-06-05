@@ -40,18 +40,28 @@ class SidebarMenu extends StatelessWidget {
               children: [
                 _NavIconButton(
                   icon: Icons.dashboard,
+                  tooltip: 'Dashboard',
                   isSelected: currentPath == AppRoutePath.dashboard,
                   onPressed: () => context.go(AppRoutePath.dashboard),
                 ),
                 const SizedBox(height: AppConstants.spacingSM),
                 _NavIconButton(
                   icon: Icons.home,
+                  tooltip: 'Airbnb',
                   isSelected: currentPath == AppRoutePath.airbnb,
                   onPressed: () => context.go(AppRoutePath.airbnb),
                 ),
                 const SizedBox(height: AppConstants.spacingSM),
                 _NavIconButton(
+                  icon: Icons.calendar_month,
+                  tooltip: 'Calendar',
+                  isSelected: currentPath == AppRoutePath.calendar,
+                  onPressed: () => context.go(AppRoutePath.calendar),
+                ),
+                const SizedBox(height: AppConstants.spacingSM),
+                _NavIconButton(
                   icon: Icons.cleaning_services,
+                  tooltip: 'Chores',
                   isSelected: currentPath == AppRoutePath.chores,
                   onPressed: () => context.go(AppRoutePath.chores),
                 ),
@@ -66,11 +76,13 @@ class SidebarMenu extends StatelessWidget {
 
 class _NavIconButton extends StatelessWidget {
   final IconData icon;
+  final String tooltip;
   final bool isSelected;
   final VoidCallback onPressed;
 
   const _NavIconButton({
     required this.icon,
+    required this.tooltip,
     required this.isSelected,
     required this.onPressed,
   });
@@ -81,6 +93,7 @@ class _NavIconButton extends StatelessWidget {
       width: 44,
       height: 44,
       child: IconButton(
+        tooltip: tooltip,
         onPressed: onPressed,
         style: IconButton.styleFrom(
           backgroundColor: isSelected

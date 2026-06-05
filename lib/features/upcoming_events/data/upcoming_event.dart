@@ -11,6 +11,7 @@ class UpcomingEvent {
   final UpcomingEventSource source;
   final UpcomingEventCategory category;
   final String? sourceId;
+  final DateTime createdAt;
 
   const UpcomingEvent({
     required this.id,
@@ -21,9 +22,42 @@ class UpcomingEvent {
     this.source = UpcomingEventSource.manual,
     this.category = UpcomingEventCategory.other,
     this.sourceId,
+    required this.createdAt,
   });
 
   bool get isTimed => endsAt != null;
+  bool get canEdit => source == UpcomingEventSource.manual;
+
+  UpcomingEvent copyWith({
+    String? id,
+    String? title,
+    DateTime? startsAt,
+    DateTime? endsAt,
+    bool clearEndsAt = false,
+    String? description,
+    bool clearDescription = false,
+    UpcomingEventSource? source,
+    UpcomingEventCategory? category,
+    String? sourceId,
+    bool clearSourceId = false,
+    DateTime? createdAt,
+  }) {
+    return UpcomingEvent(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      startsAt: startsAt ?? this.startsAt,
+      endsAt: clearEndsAt ? null : endsAt ?? this.endsAt,
+      description: clearDescription ? null : description ?? this.description,
+      source: source ?? this.source,
+      category: category ?? this.category,
+      sourceId: clearSourceId ? null : sourceId ?? this.sourceId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}
+
+String nextUpcomingEventId() {
+  return 'event-${DateTime.now().microsecondsSinceEpoch}';
 }
 
 Map<DateTime, List<UpcomingEvent>> groupUpcomingEventsByDate(

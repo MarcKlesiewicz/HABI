@@ -9,5 +9,9 @@ service cloud.firestore {
     match /chores/{choreId} {
       allow read, create, update, delete: if isOwner();
     }
+
+    match /events/{eventId} {
+      allow read, create, update, delete: if isOwner();
+    }
   }
 }
