@@ -112,6 +112,11 @@ UpcomingEvent _eventFromDocument(
       data['category'],
       UpcomingEventCategory.other,
     ),
+    recurrence: _enumFromName(
+      UpcomingEventRecurrence.values,
+      data['recurrence'],
+      UpcomingEventRecurrence.none,
+    ),
     createdAt: _dateTimeFromTimestamp(data['createdAt']) ?? DateTime.now(),
   );
 }
@@ -124,6 +129,7 @@ Map<String, dynamic> _eventToDocument(UpcomingEvent event) {
     'description': event.description,
     'source': UpcomingEventSource.manual.name,
     'category': event.category.name,
+    'recurrence': event.recurrence.name,
     'createdAt': Timestamp.fromDate(event.createdAt),
   };
 }
@@ -158,6 +164,7 @@ final _initialEvents = <UpcomingEvent>[
     startsAt: DateTime(2026, 6, 15, 10),
     endsAt: DateTime(2026, 6, 15, 11),
     category: UpcomingEventCategory.birthday,
+    recurrence: UpcomingEventRecurrence.yearly,
     createdAt: DateTime(2026, 6, 5),
   ),
   UpcomingEvent(

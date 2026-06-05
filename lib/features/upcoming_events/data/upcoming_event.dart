@@ -2,6 +2,8 @@ enum UpcomingEventSource { manual, googleCalendar, airbnb }
 
 enum UpcomingEventCategory { personal, birthday, appointment, airbnb, other }
 
+enum UpcomingEventRecurrence { none, yearly }
+
 class UpcomingEvent {
   final String id;
   final String title;
@@ -11,6 +13,7 @@ class UpcomingEvent {
   final UpcomingEventSource source;
   final UpcomingEventCategory category;
   final String? sourceId;
+  final UpcomingEventRecurrence recurrence;
   final DateTime createdAt;
 
   const UpcomingEvent({
@@ -22,11 +25,15 @@ class UpcomingEvent {
     this.source = UpcomingEventSource.manual,
     this.category = UpcomingEventCategory.other,
     this.sourceId,
+    this.recurrence = UpcomingEventRecurrence.none,
     required this.createdAt,
   });
 
   bool get isTimed => endsAt != null;
   bool get canEdit => source == UpcomingEventSource.manual;
+  bool get isGeneratedOccurrence =>
+      sourceId != null && source == UpcomingEventSource.manual;
+  String get editableId => isGeneratedOccurrence ? sourceId! : id;
 
   UpcomingEvent copyWith({
     String? id,
@@ -40,6 +47,7 @@ class UpcomingEvent {
     UpcomingEventCategory? category,
     String? sourceId,
     bool clearSourceId = false,
+    UpcomingEventRecurrence? recurrence,
     DateTime? createdAt,
   }) {
     return UpcomingEvent(
@@ -51,6 +59,7 @@ class UpcomingEvent {
       source: source ?? this.source,
       category: category ?? this.category,
       sourceId: clearSourceId ? null : sourceId ?? this.sourceId,
+      recurrence: recurrence ?? this.recurrence,
       createdAt: createdAt ?? this.createdAt,
     );
   }

@@ -46,7 +46,7 @@ class SidebarMenu extends StatelessWidget {
                 ),
                 const SizedBox(height: AppConstants.spacingSM),
                 _NavIconButton(
-                  icon: Icons.home,
+                  assetPath: 'lib/assets/svg/airbnb-icon.svg',
                   tooltip: 'Airbnb',
                   isSelected: currentPath == AppRoutePath.airbnb,
                   onPressed: () => context.go(AppRoutePath.airbnb),
@@ -75,13 +75,15 @@ class SidebarMenu extends StatelessWidget {
 }
 
 class _NavIconButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? assetPath;
   final String tooltip;
   final bool isSelected;
   final VoidCallback onPressed;
 
   const _NavIconButton({
-    required this.icon,
+    this.icon,
+    this.assetPath,
     required this.tooltip,
     required this.isSelected,
     required this.onPressed,
@@ -104,7 +106,19 @@ class _NavIconButton extends StatelessWidget {
               : context.colorScheme.onSurfaceVariant,
           shape: RoundedRectangleBorder(borderRadius: context.radiusSM),
         ),
-        icon: Icon(icon, size: 20),
+        icon: assetPath == null
+            ? Icon(icon, size: 20)
+            : SvgPicture.asset(
+                assetPath!,
+                width: 20,
+                height: 20,
+                colorFilter: ColorFilter.mode(
+                  isSelected
+                      ? context.colorScheme.onPrimary
+                      : context.colorScheme.onSurfaceVariant,
+                  BlendMode.srcIn,
+                ),
+              ),
       ),
     );
   }

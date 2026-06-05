@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/upcoming_events/data/upcoming_event.dart';
+
+const airbnbIconAsset = 'lib/assets/svg/airbnb-icon.svg';
 
 IconData upcomingEventCategoryIcon(UpcomingEventCategory category) {
   return switch (category) {
@@ -10,6 +13,26 @@ IconData upcomingEventCategoryIcon(UpcomingEventCategory category) {
     UpcomingEventCategory.personal => Icons.person_outline,
     UpcomingEventCategory.other => Icons.event_outlined,
   };
+}
+
+class UpcomingEventCategoryIcon extends StatelessWidget {
+  final UpcomingEventCategory category;
+  final double size;
+
+  const UpcomingEventCategoryIcon({
+    super.key,
+    required this.category,
+    this.size = 20,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (category == UpcomingEventCategory.airbnb) {
+      return SvgPicture.asset(airbnbIconAsset, width: size, height: size);
+    }
+
+    return Icon(upcomingEventCategoryIcon(category), size: size);
+  }
 }
 
 String upcomingEventCategoryLabel(UpcomingEventCategory category) {

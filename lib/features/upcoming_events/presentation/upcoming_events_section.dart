@@ -105,7 +105,7 @@ class _UpcomingEventTile extends StatelessWidget {
         radius: 18,
         backgroundColor: color.withValues(alpha: 0.16),
         foregroundColor: color,
-        child: Icon(upcomingEventCategoryIcon(event.category), size: 20),
+        child: UpcomingEventCategoryIcon(category: event.category),
       ),
       title: Text(
         event.title,
