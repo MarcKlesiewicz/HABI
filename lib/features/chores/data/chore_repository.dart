@@ -102,7 +102,7 @@ Chore _choreFromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
     id: document.id,
     title: data['title'] as String? ?? '',
     area: _knownValue(data['area'], choreAreas, defaultChoreArea),
-    type: _enumFromName(ChoreType.values, data['type'], ChoreType.unscheduled),
+    type: _choreTypeFromName(data['type']),
     recurrence: data['recurrence'] as String?,
     recurrenceBehavior: _enumFromName(
       RecurrenceBehavior.values,
@@ -144,6 +144,11 @@ T _enumFromName<T extends Enum>(List<T> values, Object? name, T fallback) {
     if (value.name == name) return value;
   }
   return fallback;
+}
+
+ChoreType _choreTypeFromName(Object? name) {
+  if (name == ChoreType.recurring.name) return ChoreType.recurring;
+  return ChoreType.todo;
 }
 
 String _knownValue(Object? value, List<String> allowedValues, String fallback) {

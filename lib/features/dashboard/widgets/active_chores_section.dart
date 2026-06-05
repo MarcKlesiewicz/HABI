@@ -270,10 +270,7 @@ List<Chore> _overdueChores(List<Chore> chores) {
 }
 
 bool _isDashboardCandidate(Chore chore) {
-  return chore.isActive &&
-      !chore.isDone &&
-      chore.type != ChoreType.unscheduled &&
-      chore.nextDue != null;
+  return chore.isActive && !chore.isDone && chore.nextDue != null;
 }
 
 int _compareDue(Chore a, Chore b) {

@@ -6,7 +6,7 @@ import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
 
-enum _ChoreView { due, backlog, recurring, areas }
+enum _ChoreView { due, todos, recurring, areas }
 
 enum _StatusFilter { all, open, completed, overdue }
 
@@ -59,7 +59,7 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
                     setState(() {
                       _view = view;
                       _typeFilter = null;
-                      if (view == _ChoreView.backlog) {
+                      if (view == _ChoreView.todos) {
                         _sortOption = _SortOption.createdDate;
                       } else if (view == _ChoreView.areas) {
                         _sortOption = _SortOption.area;
@@ -110,17 +110,15 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
         return chores
             .where((chore) {
               final due = chore.nextDue;
-              if (due == null || chore.type == ChoreType.unscheduled) {
-                return false;
-              }
+              if (due == null) return false;
               final dueDay = DateTime(due.year, due.month, due.day);
               return dueDay.isBefore(comingSoon) ||
                   dueDay.isAtSameMomentAs(comingSoon);
             })
             .toList(growable: false);
-      case _ChoreView.backlog:
+      case _ChoreView.todos:
         return chores
-            .where((chore) => chore.type == ChoreType.unscheduled)
+            .where((chore) => chore.type == ChoreType.todo)
             .toList(growable: false);
       case _ChoreView.recurring:
         return chores
@@ -185,14 +183,14 @@ class _Header extends StatelessWidget {
     final comingSoon = today.add(const Duration(days: 14));
     final dueCount = chores.where((chore) {
       final due = chore.nextDue;
-      if (due == null || chore.type == ChoreType.unscheduled || chore.isDone) {
+      if (due == null || chore.isDone) {
         return false;
       }
       final dueDay = DateTime(due.year, due.month, due.day);
       return dueDay.isBefore(comingSoon) || dueDay.isAtSameMomentAs(comingSoon);
     }).length;
-    final backlogCount = chores
-        .where((chore) => chore.type == ChoreType.unscheduled && !chore.isDone)
+    final todoCount = chores
+        .where((chore) => chore.type == ChoreType.todo && !chore.isDone)
         .length;
     final recurringCount = chores
         .where((chore) => chore.type == ChoreType.recurring)
@@ -213,7 +211,7 @@ class _Header extends StatelessWidget {
               ),
               context.gapXS,
               Text(
-                '$dueCount due - $backlogCount backlog - $recurringCount recurring',
+                '$dueCount due - $todoCount todos - $recurringCount recurring',
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
                 ),
@@ -460,15 +458,15 @@ class _ChoreTile extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: overdue
                     ? context.colorScheme.errorContainer
-                    : chore.type == ChoreType.unscheduled
+                    : chore.type == ChoreType.todo
                     ? context.colorScheme.surfaceContainerHigh
                     : context.colorScheme.primary.withValues(alpha: 0.2),
                 borderRadius: context.radiusSM,
               ),
               child: Icon(switch (chore.type) {
                 ChoreType.recurring => Icons.event_repeat,
-                ChoreType.scheduled => Icons.task_alt,
-                ChoreType.unscheduled => Icons.inventory_2,
+                ChoreType.todo =>
+                  chore.nextDue == null ? Icons.inventory_2 : Icons.task_alt,
               }, color: context.colorScheme.secondary),
             ),
             context.gapMD,
@@ -591,8 +589,10 @@ class _TypePill extends StatelessWidget {
           ChoreType.recurring => context.colorScheme.primary.withValues(
             alpha: 0.2,
           ),
-          ChoreType.scheduled => context.colorScheme.tertiaryContainer,
-          ChoreType.unscheduled => context.colorScheme.secondaryContainer,
+          ChoreType.todo =>
+            chore.nextDue == null
+                ? context.colorScheme.secondaryContainer
+                : context.colorScheme.tertiaryContainer,
         },
         borderRadius: context.radiusXS,
       ),
@@ -685,7 +685,7 @@ class _EmptyState extends StatelessWidget {
       child: Text(
         switch (view) {
           _ChoreView.due => 'No due chores match these filters',
-          _ChoreView.backlog => 'No backlog todos match these filters',
+          _ChoreView.todos => 'No todos match these filters',
           _ChoreView.recurring => 'No recurring chores match these filters',
           _ChoreView.areas => 'No chores match these filters',
         },
@@ -716,9 +716,8 @@ Future<void> _showChoreDialog(
     choreOwners,
     unassignedChoreOwner,
   );
-  var isActive = chore?.isActive ?? true;
-  var isDone = chore?.isDone ?? false;
   var dueDate = chore?.nextDue ?? DateTime.now();
+  var hasDueDate = chore?.nextDue != null || chore?.type == ChoreType.recurring;
 
   await showDialog<void>(
     context: context,
@@ -749,18 +748,10 @@ Future<void> _showChoreDialog(
                         ).expanded(),
                         context.gapSM,
                         _DialogTypeButton(
-                          label: 'Scheduled',
-                          isSelected: type == ChoreType.scheduled,
+                          label: 'Todo',
+                          isSelected: type == ChoreType.todo,
                           onPressed: () {
-                            setDialogState(() => type = ChoreType.scheduled);
-                          },
-                        ).expanded(),
-                        context.gapSM,
-                        _DialogTypeButton(
-                          label: 'Backlog',
-                          isSelected: type == ChoreType.unscheduled,
-                          onPressed: () {
-                            setDialogState(() => type = ChoreType.unscheduled);
+                            setDialogState(() => type = ChoreType.todo);
                           },
                         ).expanded(),
                       ],
@@ -836,7 +827,7 @@ Future<void> _showChoreDialog(
                         ],
                       ),
                     ],
-                    if (type != ChoreType.unscheduled) ...[
+                    if (type == ChoreType.recurring || hasDueDate) ...[
                       context.gapMD,
                       Row(
                         children: [
@@ -857,26 +848,29 @@ Future<void> _showChoreDialog(
                             icon: const Icon(Icons.calendar_today, size: 16),
                             label: const Text('Pick date'),
                           ),
+                          if (type == ChoreType.todo)
+                            IconButton(
+                              tooltip: 'Remove due date',
+                              onPressed: () {
+                                setDialogState(() => hasDueDate = false);
+                              },
+                              icon: const Icon(Icons.clear),
+                            ),
                         ],
                       ),
-                    ],
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Active'),
-                      value: isActive,
-                      onChanged: (value) {
-                        setDialogState(() => isActive = value);
-                      },
-                    ),
-                    if (type != ChoreType.recurring)
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Completed'),
-                        value: isDone,
-                        onChanged: (value) {
-                          setDialogState(() => isDone = value ?? false);
-                        },
+                    ] else ...[
+                      context.gapMD,
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            setDialogState(() => hasDueDate = true);
+                          },
+                          icon: const Icon(Icons.calendar_today, size: 16),
+                          label: const Text('Add due date'),
+                        ),
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -904,9 +898,13 @@ Future<void> _showChoreDialog(
                         : null,
                     recurrenceBehavior: recurrenceBehavior,
                     assignedTo: assignedTo,
-                    nextDue: type == ChoreType.unscheduled ? null : dueDate,
-                    isActive: isActive,
-                    isDone: type == ChoreType.recurring ? false : isDone,
+                    nextDue: type == ChoreType.todo && !hasDueDate
+                        ? null
+                        : dueDate,
+                    isActive: chore?.isActive ?? true,
+                    isDone: type == ChoreType.recurring
+                        ? false
+                        : chore?.isDone ?? false,
                     createdAt: chore?.createdAt ?? DateTime.now(),
                   );
 
@@ -1003,8 +1001,8 @@ String _viewLabel(_ChoreView view) {
   switch (view) {
     case _ChoreView.due:
       return 'Due';
-    case _ChoreView.backlog:
-      return 'Backlog';
+    case _ChoreView.todos:
+      return 'Todos';
     case _ChoreView.recurring:
       return 'Recurring';
     case _ChoreView.areas:
@@ -1016,10 +1014,8 @@ String _typeLabel(ChoreType type) {
   switch (type) {
     case ChoreType.recurring:
       return 'Recurring';
-    case ChoreType.scheduled:
-      return 'Scheduled';
-    case ChoreType.unscheduled:
-      return 'Backlog';
+    case ChoreType.todo:
+      return 'Todo';
   }
 }
 

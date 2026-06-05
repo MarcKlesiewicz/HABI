@@ -1,9 +1,9 @@
-enum ChoreType { recurring, scheduled, unscheduled }
+enum ChoreType { recurring, todo }
 
 enum RecurrenceBehavior { fixed, flexible }
 
 const unassignedChoreOwner = 'Unassigned';
-const defaultChoreArea = 'Lykkehøj';
+const defaultChoreArea = 'Lykkeh\u00f8j';
 
 const choreOwners = <String>[unassignedChoreOwner, 'Marc', 'Mathilde', 'Cody'];
 
@@ -47,24 +47,21 @@ class Chore {
 
   String get scheduleLabel {
     if (type == ChoreType.recurring) return recurrence ?? 'Recurring';
-    if (type == ChoreType.scheduled) return 'Scheduled one-off';
-    return 'Backlog';
+    return nextDue == null ? 'Backlog' : 'Scheduled todo';
   }
 
   String get typeLabel {
     switch (type) {
       case ChoreType.recurring:
         return 'Recurring';
-      case ChoreType.scheduled:
-        return 'Scheduled';
-      case ChoreType.unscheduled:
-        return 'Backlog';
+      case ChoreType.todo:
+        return nextDue == null ? 'Backlog' : 'Scheduled';
     }
   }
 
   bool get hasDueDate => nextDue != null;
 
-  bool get canComplete => type != ChoreType.recurring || nextDue != null;
+  bool get canComplete => type == ChoreType.todo || nextDue != null;
 
   bool isOverdue(DateTime now) {
     if (nextDue == null || isDone) return false;
@@ -112,7 +109,7 @@ final initialChores = <Chore>[
   Chore(
     id: 'plants',
     title: 'Water plants',
-    area: 'Living room',
+    area: 'Living Room',
     type: ChoreType.recurring,
     recurrence: 'Every 3 days',
     recurrenceBehavior: RecurrenceBehavior.flexible,
@@ -125,7 +122,7 @@ final initialChores = <Chore>[
   Chore(
     id: 'sheets',
     title: 'Change bed sheets',
-    area: 'Bedroom',
+    area: defaultChoreArea,
     type: ChoreType.recurring,
     recurrence: 'Weekly',
     recurrenceBehavior: RecurrenceBehavior.fixed,
@@ -151,7 +148,7 @@ final initialChores = <Chore>[
   Chore(
     id: 'bins',
     title: 'Take out recycling',
-    area: 'Utility',
+    area: defaultChoreArea,
     type: ChoreType.recurring,
     recurrence: 'Tuesdays',
     recurrenceBehavior: RecurrenceBehavior.fixed,
@@ -165,7 +162,7 @@ final initialChores = <Chore>[
     id: 'filters',
     title: 'Replace hood filters',
     area: 'Kitchen',
-    type: ChoreType.scheduled,
+    type: ChoreType.todo,
     assignedTo: 'Marc',
     nextDue: DateTime(2026, 6, 12),
     isActive: true,
@@ -176,7 +173,7 @@ final initialChores = <Chore>[
     id: 'garage',
     title: 'Sort garage shelf',
     area: 'Garage',
-    type: ChoreType.unscheduled,
+    type: ChoreType.todo,
     assignedTo: 'Marc',
     isActive: true,
     isDone: false,
