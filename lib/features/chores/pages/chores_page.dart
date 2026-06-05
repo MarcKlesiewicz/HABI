@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
+import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
 
@@ -10,14 +12,14 @@ enum _StatusFilter { all, open, completed, overdue }
 
 enum _SortOption { dueDate, area, effort, createdDate }
 
-class ChoresPage extends StatefulWidget {
+class ChoresPage extends ConsumerStatefulWidget {
   const ChoresPage({super.key});
 
   @override
-  State<ChoresPage> createState() => _ChoresPageState();
+  ConsumerState<ChoresPage> createState() => _ChoresPageState();
 }
 
-class _ChoresPageState extends State<ChoresPage> {
+class _ChoresPageState extends ConsumerState<ChoresPage> {
   _ChoreView _view = _ChoreView.due;
   ChoreType? _typeFilter;
   String? _areaFilter;
@@ -27,10 +29,15 @@ class _ChoresPageState extends State<ChoresPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: ChoreStore.instance,
-      builder: (context, _) {
-        final chores = ChoreStore.instance.chores;
+    final choresState = ref.watch(choresProvider);
+
+    return choresState.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => GlassContainer(
+        isElevated: true,
+        child: Center(child: Text('Could not load chores: $error')),
+      ),
+      data: (chores) {
         final filtered = _applyFilters(_choresForView(chores));
         final sorted = _sortChores(filtered);
         final areas = _uniqueValues(chores.map((chore) => chore.area));
@@ -45,7 +52,7 @@ class _ChoresPageState extends State<ChoresPage> {
               children: [
                 _Header(
                   chores: chores,
-                  onAddPressed: () => _showChoreDialog(context),
+                  onAddPressed: () => _showChoreDialog(context, ref),
                 ),
                 context.gapLG,
                 _ViewTabs(
@@ -444,13 +451,13 @@ class _AreasList extends StatelessWidget {
   }
 }
 
-class _ChoreTile extends StatelessWidget {
+class _ChoreTile extends ConsumerWidget {
   final Chore chore;
 
   const _ChoreTile({required this.chore});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isRecurring = chore.type == ChoreType.recurring;
     final isTodo = chore.type != ChoreType.recurring;
     final overdue = chore.isOverdue(DateTime.now());
@@ -550,13 +557,14 @@ class _ChoreTile extends StatelessWidget {
             if (isTodo)
               Checkbox(
                 value: chore.isDone,
-                onChanged: (_) => _toggleTodoDone(chore),
+                onChanged: (_) => _toggleTodoDone(ref, chore),
               )
             else
               IconButton(
                 tooltip: 'Complete and schedule next',
                 onPressed: chore.canComplete
-                    ? () => ChoreStore.instance.completeChore(chore.id)
+                    ? () =>
+                          ref.read(choreControllerProvider).completeChore(chore)
                     : null,
                 icon: const Icon(Icons.check_circle_outline),
               ),
@@ -564,11 +572,11 @@ class _ChoreTile extends StatelessWidget {
               icon: const Icon(Icons.more_vert),
               onSelected: (value) {
                 if (value == 'edit') {
-                  _showChoreDialog(context, chore: chore);
+                  _showChoreDialog(context, ref, chore: chore);
                   return;
                 }
                 if (value == 'delete') {
-                  _confirmDelete(context, chore);
+                  _confirmDelete(context, ref, chore);
                 }
               },
               itemBuilder: (context) => const [
@@ -706,7 +714,11 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-Future<void> _showChoreDialog(BuildContext context, {Chore? chore}) async {
+Future<void> _showChoreDialog(
+  BuildContext context,
+  WidgetRef ref, {
+  Chore? chore,
+}) async {
   final isEditing = chore != null;
   final titleController = TextEditingController(text: chore?.title ?? '');
   final areaController = TextEditingController(text: chore?.area ?? '');
@@ -897,7 +909,7 @@ Future<void> _showChoreDialog(BuildContext context, {Chore? chore}) async {
                   }
 
                   final savedChore = Chore(
-                    id: chore?.id ?? ChoreStore.instance.nextId(),
+                    id: chore?.id ?? nextChoreId(),
                     title: title,
                     area: area,
                     type: type,
@@ -915,9 +927,9 @@ Future<void> _showChoreDialog(BuildContext context, {Chore? chore}) async {
                   );
 
                   if (isEditing) {
-                    ChoreStore.instance.updateChore(savedChore);
+                    ref.read(choreControllerProvider).updateChore(savedChore);
                   } else {
-                    ChoreStore.instance.createChore(savedChore);
+                    ref.read(choreControllerProvider).createChore(savedChore);
                   }
                   Navigator.of(dialogContext).pop();
                 },
@@ -952,7 +964,11 @@ class _DialogTypeButton extends StatelessWidget {
   }
 }
 
-Future<void> _confirmDelete(BuildContext context, Chore chore) async {
+Future<void> _confirmDelete(
+  BuildContext context,
+  WidgetRef ref,
+  Chore chore,
+) async {
   final shouldDelete = await showDialog<bool>(
     context: context,
     builder: (dialogContext) {
@@ -974,19 +990,17 @@ Future<void> _confirmDelete(BuildContext context, Chore chore) async {
   );
 
   if (shouldDelete ?? false) {
-    ChoreStore.instance.deleteChore(chore.id);
+    await ref.read(choreControllerProvider).deleteChore(chore.id);
   }
 }
 
-void _toggleTodoDone(Chore chore) {
+void _toggleTodoDone(WidgetRef ref, Chore chore) {
   if (chore.isDone) {
-    ChoreStore.instance.updateChore(
-      chore.copyWith(isDone: false, isActive: true, clearLastCompletedAt: true),
-    );
+    ref.read(choreControllerProvider).reopenChore(chore);
     return;
   }
 
-  ChoreStore.instance.completeChore(chore.id);
+  ref.read(choreControllerProvider).completeChore(chore);
 }
 
 List<String> _uniqueValues(Iterable<String> values) {

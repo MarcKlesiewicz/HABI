@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "869377962935",
+    "project_id": "habi-17b3e",
+    "storage_bucket": "habi-17b3e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869377962935:android:c684c27c140e6375ef6e32",
+        "android_client_info": {
+          "package_name": "com.example.habi_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3p3ML0JKIbQejRTcloVHn_IUwI5S_9Rs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

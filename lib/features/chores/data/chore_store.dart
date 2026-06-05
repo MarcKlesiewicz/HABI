@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 enum ChoreType { recurring, scheduled, unscheduled }
 
 enum RecurrenceBehavior { fixed, flexible }
@@ -102,184 +100,119 @@ class Chore {
   }
 }
 
-class ChoreStore extends ChangeNotifier {
-  ChoreStore._();
+final initialChores = <Chore>[
+  Chore(
+    id: 'plants',
+    title: 'Water plants',
+    area: 'Living room',
+    type: ChoreType.recurring,
+    recurrence: 'Every 3 days',
+    recurrenceBehavior: RecurrenceBehavior.flexible,
+    assignedTo: 'Marc',
+    nextDue: DateTime(2026, 6, 3),
+    isActive: true,
+    isDone: false,
+    effort: ChoreEffort.low,
+    createdAt: DateTime(2026, 2, 26),
+  ),
+  Chore(
+    id: 'sheets',
+    title: 'Change bed sheets',
+    area: 'Bedroom',
+    type: ChoreType.recurring,
+    recurrence: 'Weekly',
+    recurrenceBehavior: RecurrenceBehavior.fixed,
+    assignedTo: 'Mathilde',
+    nextDue: DateTime(2026, 6, 7),
+    isActive: true,
+    isDone: false,
+    effort: ChoreEffort.medium,
+    createdAt: DateTime(2026, 2, 26),
+  ),
+  Chore(
+    id: 'fridge',
+    title: 'Clean fridge',
+    area: 'Kitchen',
+    type: ChoreType.recurring,
+    recurrence: 'Monthly',
+    recurrenceBehavior: RecurrenceBehavior.fixed,
+    assignedTo: 'Marc',
+    nextDue: DateTime(2026, 6, 20),
+    isActive: false,
+    isDone: false,
+    effort: ChoreEffort.high,
+    createdAt: DateTime(2026, 2, 27),
+  ),
+  Chore(
+    id: 'bins',
+    title: 'Take out recycling',
+    area: 'Utility',
+    type: ChoreType.recurring,
+    recurrence: 'Tuesdays',
+    recurrenceBehavior: RecurrenceBehavior.fixed,
+    assignedTo: 'Cody',
+    nextDue: DateTime(2026, 6, 2),
+    isActive: true,
+    isDone: false,
+    effort: ChoreEffort.low,
+    createdAt: DateTime(2026, 2, 27),
+  ),
+  Chore(
+    id: 'filters',
+    title: 'Replace hood filters',
+    area: 'Kitchen',
+    type: ChoreType.scheduled,
+    assignedTo: 'Marc',
+    nextDue: DateTime(2026, 6, 12),
+    isActive: true,
+    isDone: false,
+    effort: ChoreEffort.medium,
+    createdAt: DateTime(2026, 3, 1),
+  ),
+  Chore(
+    id: 'garage',
+    title: 'Sort garage shelf',
+    area: 'Garage',
+    type: ChoreType.unscheduled,
+    assignedTo: 'Marc',
+    isActive: true,
+    isDone: false,
+    effort: ChoreEffort.high,
+    createdAt: DateTime(2026, 3, 2),
+  ),
+];
 
-  static final ChoreStore instance = ChoreStore._();
+String nextChoreId() => DateTime.now().microsecondsSinceEpoch.toString();
 
-  final List<Chore> _chores = [
-    Chore(
-      id: 'plants',
-      title: 'Water plants',
-      area: 'Living room',
-      type: ChoreType.recurring,
-      recurrence: 'Every 3 days',
-      recurrenceBehavior: RecurrenceBehavior.flexible,
-      assignedTo: 'Marc',
-      nextDue: DateTime(2026, 6, 3),
-      isActive: true,
-      isDone: false,
-      effort: ChoreEffort.low,
-      createdAt: DateTime(2026, 2, 26),
-    ),
-    Chore(
-      id: 'sheets',
-      title: 'Change bed sheets',
-      area: 'Bedroom',
-      type: ChoreType.recurring,
-      recurrence: 'Weekly',
-      recurrenceBehavior: RecurrenceBehavior.fixed,
-      assignedTo: 'Mathilde',
-      nextDue: DateTime(2026, 6, 7),
-      isActive: true,
-      isDone: false,
-      effort: ChoreEffort.medium,
-      createdAt: DateTime(2026, 2, 26),
-    ),
-    Chore(
-      id: 'fridge',
-      title: 'Clean fridge',
-      area: 'Kitchen',
-      type: ChoreType.recurring,
-      recurrence: 'Monthly',
-      recurrenceBehavior: RecurrenceBehavior.fixed,
-      assignedTo: 'Marc',
-      nextDue: DateTime(2026, 6, 20),
-      isActive: false,
-      isDone: false,
-      effort: ChoreEffort.high,
-      createdAt: DateTime(2026, 2, 27),
-    ),
-    Chore(
-      id: 'bins',
-      title: 'Take out recycling',
-      area: 'Utility',
-      type: ChoreType.recurring,
-      recurrence: 'Tuesdays',
-      recurrenceBehavior: RecurrenceBehavior.fixed,
-      assignedTo: 'Cody',
-      nextDue: DateTime(2026, 6, 2),
-      isActive: true,
-      isDone: false,
-      effort: ChoreEffort.low,
-      createdAt: DateTime(2026, 2, 27),
-    ),
-    Chore(
-      id: 'filters',
-      title: 'Replace hood filters',
-      area: 'Kitchen',
-      type: ChoreType.scheduled,
-      assignedTo: 'Marc',
-      nextDue: DateTime(2026, 6, 12),
-      isActive: true,
-      isDone: false,
-      effort: ChoreEffort.medium,
-      createdAt: DateTime(2026, 3, 1),
-    ),
-    Chore(
-      id: 'garage',
-      title: 'Sort garage shelf',
-      area: 'Garage',
-      type: ChoreType.unscheduled,
-      assignedTo: 'Marc',
-      isActive: true,
-      isDone: false,
-      effort: ChoreEffort.high,
-      createdAt: DateTime(2026, 3, 2),
-    ),
-  ];
+int compareChoresByDueDate(Chore a, Chore b) {
+  final aDue = a.nextDue;
+  final bDue = b.nextDue;
+  if (aDue == null && bDue == null) return a.title.compareTo(b.title);
+  if (aDue == null) return 1;
+  if (bDue == null) return -1;
+  return aDue.compareTo(bDue);
+}
 
-  List<Chore> get chores => List.unmodifiable(_chores);
+class ChoreScheduler {
+  const ChoreScheduler();
 
-  List<Chore> get activeChores =>
-      _chores
-          .where(
-            (chore) =>
-                chore.isActive &&
-                !chore.isDone &&
-                chore.type != ChoreType.unscheduled,
-          )
-          .toList(growable: false)
-        ..sort(_compareByDueDate);
-
-  void createChore(Chore chore) {
-    _chores.add(chore);
-    _sortChores();
-    notifyListeners();
-  }
-
-  void updateChore(Chore chore) {
-    final index = _chores.indexWhere((item) => item.id == chore.id);
-    if (index == -1) return;
-
-    _chores[index] = chore;
-    _sortChores();
-    notifyListeners();
-  }
-
-  void deleteChore(String id) {
-    _chores.removeWhere((chore) => chore.id == id);
-    notifyListeners();
-  }
-
-  void toggleActive(String id) {
-    final index = _chores.indexWhere((chore) => chore.id == id);
-    if (index == -1) return;
-
-    final chore = _chores[index];
-    _chores[index] = chore.copyWith(isActive: !chore.isActive);
-    notifyListeners();
-  }
-
-  void toggleDone(String id) {
-    final index = _chores.indexWhere((chore) => chore.id == id);
-    if (index == -1) return;
-
-    final chore = _chores[index];
-    _chores[index] = chore.copyWith(isDone: !chore.isDone);
-    notifyListeners();
-  }
-
-  void completeChore(String id, {DateTime? completedAt}) {
-    final index = _chores.indexWhere((chore) => chore.id == id);
-    if (index == -1) return;
-
-    final chore = _chores[index];
+  Chore complete(Chore chore, {DateTime? completedAt}) {
     final completionDate = completedAt ?? DateTime.now();
 
     if (chore.type == ChoreType.recurring) {
-      final nextDue = _calculateNextDue(chore, completionDate);
-      _chores[index] = chore.copyWith(
-        nextDue: nextDue,
+      return chore.copyWith(
+        nextDue: _calculateNextDue(chore, completionDate),
         lastCompletedAt: completionDate,
         isDone: false,
         isActive: true,
       );
-    } else {
-      _chores[index] = chore.copyWith(
-        isDone: true,
-        isActive: false,
-        lastCompletedAt: completionDate,
-      );
     }
 
-    _sortChores();
-    notifyListeners();
-  }
-
-  String nextId() => DateTime.now().microsecondsSinceEpoch.toString();
-
-  void _sortChores() {
-    _chores.sort(_compareByDueDate);
-  }
-
-  int _compareByDueDate(Chore a, Chore b) {
-    final aDue = a.nextDue;
-    final bDue = b.nextDue;
-    if (aDue == null && bDue == null) return a.title.compareTo(b.title);
-    if (aDue == null) return 1;
-    if (bDue == null) return -1;
-    return aDue.compareTo(bDue);
+    return chore.copyWith(
+      isDone: true,
+      isActive: false,
+      lastCompletedAt: completionDate,
+    );
   }
 
   DateTime _calculateNextDue(Chore chore, DateTime completedAt) {

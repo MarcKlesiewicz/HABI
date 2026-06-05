@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner() {
+      return request.auth.uid == "K8jA7sJqucNvc9TxakSOh8MGgv92";
+    }
+
+    match /chores/{choreId} {
+      allow read, create, update, delete: if isOwner();
+    }
+  }
+}

@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habi/config/routes/routes.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
+import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
 
-class ActiveChoresSection extends StatelessWidget {
+class ActiveChoresSection extends ConsumerWidget {
   const ActiveChoresSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: ChoreStore.instance,
-      builder: (context, _) {
-        final chores = ChoreStore.instance.chores;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final choresState = ref.watch(choresProvider);
+
+    return choresState.when(
+      loading: () => const GlassContainer(
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => GlassContainer(
+        child: Padding(
+          padding: context.paddingMD,
+          child: Text('Could not load chores: $error'),
+        ),
+      ),
+      data: (chores) {
         final todayChores = _todayChores(chores);
         final overdueChores = _overdueChores(chores);
         final attentionCount = todayChores.length + overdueChores.length;
@@ -145,14 +156,14 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _TodayChoreTile extends StatelessWidget {
+class _TodayChoreTile extends ConsumerWidget {
   final Chore chore;
   final bool isOverdue;
 
   const _TodayChoreTile({required this.chore, this.isOverdue = false});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GlassContainer(
       child: Padding(
         padding: context.paddingSM,
@@ -220,7 +231,8 @@ class _TodayChoreTile extends StatelessWidget {
             context.gapSM,
             IconButton(
               tooltip: 'Mark completed',
-              onPressed: () => ChoreStore.instance.completeChore(chore.id),
+              onPressed: () =>
+                  ref.read(choreControllerProvider).completeChore(chore),
               icon: const Icon(Icons.check_circle_outline),
             ),
           ],
