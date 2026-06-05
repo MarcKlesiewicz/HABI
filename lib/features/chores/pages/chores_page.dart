@@ -238,15 +238,35 @@ class _ViewTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      spacing: AppConstants.spacingSM,
-      children: _ChoreView.values.map((view) {
-        return _SegmentButton(
-          label: _viewLabel(view),
-          isSelected: selectedView == view,
-          onPressed: () => onViewChanged(view),
-        ).expanded();
-      }).toList(),
+    return SizedBox(
+      width: double.infinity,
+      child: SegmentedButton<_ChoreView>(
+        showSelectedIcon: false,
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return context.colorScheme.primary;
+            }
+            return context.colorScheme.surfaceContainerHigh;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return context.colorScheme.onPrimary;
+            }
+            return context.colorScheme.onSurfaceVariant;
+          }),
+        ),
+        segments: _ChoreView.values.map((view) {
+          return ButtonSegment<_ChoreView>(
+            value: view,
+            label: Text(_viewLabel(view), overflow: TextOverflow.ellipsis),
+          );
+        }).toList(),
+        selected: {selectedView},
+        onSelectionChanged: (selection) {
+          onViewChanged(selection.first);
+        },
+      ),
     );
   }
 }
@@ -1270,11 +1290,11 @@ String _viewLabel(_ChoreView view) {
     case _ChoreView.due:
       return 'Due';
     case _ChoreView.todos:
-      return 'Todos';
+      return 'Todo';
     case _ChoreView.recurring:
       return 'Recurring';
     case _ChoreView.areas:
-      return 'Areas';
+      return 'Area';
   }
 }
 
