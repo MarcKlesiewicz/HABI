@@ -23,5 +23,5 @@ Future<void> initializeFirebase() async {
 Future<void> ensureFirebaseSignedIn() async {
   final auth = FirebaseAuth.instance;
   if (auth.currentUser != null) return;
-  await auth.signInAnonymously();
+  await auth.signInAnonymously().timeout(const Duration(seconds: 10));
 }

@@ -10,7 +10,7 @@ enum _ChoreView { due, backlog, recurring, areas }
 
 enum _StatusFilter { all, open, completed, overdue }
 
-enum _SortOption { dueDate, area, effort, createdDate }
+enum _SortOption { dueDate, area, createdDate }
 
 class ChoresPage extends ConsumerStatefulWidget {
   const ChoresPage({super.key});
@@ -40,8 +40,6 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
       data: (chores) {
         final filtered = _applyFilters(_choresForView(chores));
         final sorted = _sortChores(filtered);
-        final areas = _uniqueValues(chores.map((chore) => chore.area));
-        final people = _uniqueValues(chores.map((chore) => chore.assignedTo));
 
         return GlassContainer(
           isElevated: true,
@@ -78,8 +76,6 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
                   assignedToFilter: _assignedToFilter,
                   statusFilter: _statusFilter,
                   sortOption: _sortOption,
-                  areas: areas,
-                  people: people,
                   onTypeChanged: (value) => setState(() => _typeFilter = value),
                   onAreaChanged: (value) => setState(() => _areaFilter = value),
                   onAssignedChanged: (value) {
@@ -168,11 +164,6 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
         case _SortOption.area:
           final area = a.area.compareTo(b.area);
           return area == 0 ? _compareNullableDates(a.nextDue, b.nextDue) : area;
-        case _SortOption.effort:
-          final effort = b.effort.index.compareTo(a.effort.index);
-          return effort == 0
-              ? _compareNullableDates(a.nextDue, b.nextDue)
-              : effort;
         case _SortOption.createdDate:
           return b.createdAt.compareTo(a.createdAt);
       }
@@ -267,8 +258,6 @@ class _FilterBar extends StatelessWidget {
   final String? assignedToFilter;
   final _StatusFilter statusFilter;
   final _SortOption sortOption;
-  final List<String> areas;
-  final List<String> people;
   final ValueChanged<ChoreType?> onTypeChanged;
   final ValueChanged<String?> onAreaChanged;
   final ValueChanged<String?> onAssignedChanged;
@@ -281,8 +270,6 @@ class _FilterBar extends StatelessWidget {
     required this.assignedToFilter,
     required this.statusFilter,
     required this.sortOption,
-    required this.areas,
-    required this.people,
     required this.onTypeChanged,
     required this.onAreaChanged,
     required this.onAssignedChanged,
@@ -307,14 +294,14 @@ class _FilterBar extends StatelessWidget {
         _FilterMenu<String?>(
           label: 'Area',
           value: areaFilter,
-          options: [null, ...areas],
+          options: const [null, ...choreAreas],
           optionLabel: (value) => value ?? 'All areas',
           onChanged: onAreaChanged,
         ),
         _FilterMenu<String?>(
           label: 'Person',
           value: assignedToFilter,
-          options: [null, ...people],
+          options: const [null, ...choreOwners],
           optionLabel: (value) => value ?? 'Anyone',
           onChanged: onAssignedChanged,
         ),
@@ -515,10 +502,6 @@ class _ChoreTile extends ConsumerWidget {
                     children: [
                       _ChoreMeta(icon: Icons.place, label: chore.area),
                       _ChoreMeta(icon: Icons.person, label: chore.assignedTo),
-                      _ChoreMeta(
-                        icon: Icons.speed,
-                        label: _effortLabel(chore.effort),
-                      ),
                       _ChoreMeta(
                         icon: Icons.calendar_today,
                         label: _formatDueDate(chore.nextDue),
@@ -721,17 +704,18 @@ Future<void> _showChoreDialog(
 }) async {
   final isEditing = chore != null;
   final titleController = TextEditingController(text: chore?.title ?? '');
-  final areaController = TextEditingController(text: chore?.area ?? '');
-  final assignedToController = TextEditingController(
-    text: chore?.assignedTo ?? '',
-  );
   final recurrenceController = TextEditingController(
     text: chore?.recurrence ?? '',
   );
   var type = chore?.type ?? ChoreType.recurring;
   var recurrenceBehavior =
       chore?.recurrenceBehavior ?? RecurrenceBehavior.fixed;
-  var effort = chore?.effort ?? ChoreEffort.medium;
+  var area = _optionOrDefault(chore?.area, choreAreas, defaultChoreArea);
+  var assignedTo = _optionOrDefault(
+    chore?.assignedTo,
+    choreOwners,
+    unassignedChoreOwner,
+  );
   var isActive = chore?.isActive ?? true;
   var isDone = chore?.isDone ?? false;
   var dueDate = chore?.nextDue ?? DateTime.now();
@@ -782,30 +766,35 @@ Future<void> _showChoreDialog(
                       ],
                     ),
                     context.gapMD,
-                    TextField(
-                      controller: areaController,
+                    DropdownButtonFormField<String>(
+                      initialValue: area,
                       decoration: const InputDecoration(labelText: 'Area'),
-                    ),
-                    context.gapMD,
-                    TextField(
-                      controller: assignedToController,
-                      decoration: const InputDecoration(
-                        labelText: 'Assigned to',
-                      ),
-                    ),
-                    context.gapMD,
-                    DropdownButtonFormField<ChoreEffort>(
-                      initialValue: effort,
-                      decoration: const InputDecoration(labelText: 'Effort'),
-                      items: ChoreEffort.values.map((value) {
+                      items: choreAreas.map((value) {
                         return DropdownMenuItem(
                           value: value,
-                          child: Text(_effortLabel(value)),
+                          child: Text(value),
                         );
                       }).toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        setDialogState(() => effort = value);
+                        setDialogState(() => area = value);
+                      },
+                    ),
+                    context.gapMD,
+                    DropdownButtonFormField<String>(
+                      initialValue: assignedTo,
+                      decoration: const InputDecoration(
+                        labelText: 'Assigned to',
+                      ),
+                      items: choreOwners.map((value) {
+                        return DropdownMenuItem(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setDialogState(() => assignedTo = value);
                       },
                     ),
                     if (type == ChoreType.recurring) ...[
@@ -900,13 +889,9 @@ Future<void> _showChoreDialog(
               FilledButton(
                 onPressed: () {
                   final title = titleController.text.trim();
-                  final area = areaController.text.trim();
-                  final assignedTo = assignedToController.text.trim();
                   final recurrence = recurrenceController.text.trim();
 
-                  if (title.isEmpty || area.isEmpty || assignedTo.isEmpty) {
-                    return;
-                  }
+                  if (title.isEmpty) return;
 
                   final savedChore = Chore(
                     id: chore?.id ?? nextChoreId(),
@@ -922,7 +907,6 @@ Future<void> _showChoreDialog(
                     nextDue: type == ChoreType.unscheduled ? null : dueDate,
                     isActive: isActive,
                     isDone: type == ChoreType.recurring ? false : isDone,
-                    effort: effort,
                     createdAt: chore?.createdAt ?? DateTime.now(),
                   );
 
@@ -1003,10 +987,6 @@ void _toggleTodoDone(WidgetRef ref, Chore chore) {
   ref.read(choreControllerProvider).completeChore(chore);
 }
 
-List<String> _uniqueValues(Iterable<String> values) {
-  return values.toSet().toList()..sort();
-}
-
 int _compareNullableDates(DateTime? a, DateTime? b) {
   if (a == null && b == null) return 0;
   if (a == null) return 1;
@@ -1062,20 +1042,21 @@ String _sortLabel(_SortOption sort) {
       return 'Due date';
     case _SortOption.area:
       return 'Area';
-    case _SortOption.effort:
-      return 'Effort';
     case _SortOption.createdDate:
       return 'Created';
   }
 }
 
-String _effortLabel(ChoreEffort effort) {
-  switch (effort) {
-    case ChoreEffort.low:
-      return 'Low effort';
-    case ChoreEffort.medium:
-      return 'Medium effort';
-    case ChoreEffort.high:
-      return 'High effort';
+String _optionOrDefault(
+  String? value,
+  List<String> allowedValues,
+  String fallback,
+) {
+  if (value == null) return fallback;
+  for (final allowedValue in allowedValues) {
+    if (allowedValue.toLowerCase() == value.toLowerCase()) {
+      return allowedValue;
+    }
   }
+  return fallback;
 }

@@ -2,7 +2,19 @@ enum ChoreType { recurring, scheduled, unscheduled }
 
 enum RecurrenceBehavior { fixed, flexible }
 
-enum ChoreEffort { low, medium, high }
+const unassignedChoreOwner = 'Unassigned';
+const defaultChoreArea = 'Lykkehøj';
+
+const choreOwners = <String>[unassignedChoreOwner, 'Marc', 'Mathilde', 'Cody'];
+
+const choreAreas = <String>[
+  defaultChoreArea,
+  'Kitchen',
+  'Garden',
+  'Living Room',
+  'Stable',
+  'Garage',
+];
 
 class Chore {
   final String id;
@@ -16,7 +28,6 @@ class Chore {
   final bool isActive;
   final bool isDone;
   final DateTime? lastCompletedAt;
-  final ChoreEffort effort;
   final DateTime createdAt;
 
   const Chore({
@@ -31,7 +42,6 @@ class Chore {
     required this.isActive,
     required this.isDone,
     this.lastCompletedAt,
-    this.effort = ChoreEffort.medium,
     required this.createdAt,
   });
 
@@ -77,7 +87,6 @@ class Chore {
     bool? isDone,
     DateTime? lastCompletedAt,
     bool clearLastCompletedAt = false,
-    ChoreEffort? effort,
     DateTime? createdAt,
   }) {
     return Chore(
@@ -94,7 +103,6 @@ class Chore {
       lastCompletedAt: clearLastCompletedAt
           ? null
           : lastCompletedAt ?? this.lastCompletedAt,
-      effort: effort ?? this.effort,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -112,7 +120,6 @@ final initialChores = <Chore>[
     nextDue: DateTime(2026, 6, 3),
     isActive: true,
     isDone: false,
-    effort: ChoreEffort.low,
     createdAt: DateTime(2026, 2, 26),
   ),
   Chore(
@@ -126,7 +133,6 @@ final initialChores = <Chore>[
     nextDue: DateTime(2026, 6, 7),
     isActive: true,
     isDone: false,
-    effort: ChoreEffort.medium,
     createdAt: DateTime(2026, 2, 26),
   ),
   Chore(
@@ -140,7 +146,6 @@ final initialChores = <Chore>[
     nextDue: DateTime(2026, 6, 20),
     isActive: false,
     isDone: false,
-    effort: ChoreEffort.high,
     createdAt: DateTime(2026, 2, 27),
   ),
   Chore(
@@ -154,7 +159,6 @@ final initialChores = <Chore>[
     nextDue: DateTime(2026, 6, 2),
     isActive: true,
     isDone: false,
-    effort: ChoreEffort.low,
     createdAt: DateTime(2026, 2, 27),
   ),
   Chore(
@@ -166,7 +170,6 @@ final initialChores = <Chore>[
     nextDue: DateTime(2026, 6, 12),
     isActive: true,
     isDone: false,
-    effort: ChoreEffort.medium,
     createdAt: DateTime(2026, 3, 1),
   ),
   Chore(
@@ -177,7 +180,6 @@ final initialChores = <Chore>[
     assignedTo: 'Marc',
     isActive: true,
     isDone: false,
-    effort: ChoreEffort.high,
     createdAt: DateTime(2026, 3, 2),
   ),
 ];

@@ -101,7 +101,7 @@ Chore _choreFromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
   return Chore(
     id: document.id,
     title: data['title'] as String? ?? '',
-    area: data['area'] as String? ?? '',
+    area: _knownValue(data['area'], choreAreas, defaultChoreArea),
     type: _enumFromName(ChoreType.values, data['type'], ChoreType.unscheduled),
     recurrence: data['recurrence'] as String?,
     recurrenceBehavior: _enumFromName(
@@ -109,16 +109,15 @@ Chore _choreFromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
       data['recurrenceBehavior'],
       RecurrenceBehavior.fixed,
     ),
-    assignedTo: data['assignedTo'] as String? ?? '',
+    assignedTo: _knownValue(
+      data['assignedTo'],
+      choreOwners,
+      unassignedChoreOwner,
+    ),
     nextDue: _dateTimeFromTimestamp(data['nextDue']),
     isActive: data['isActive'] as bool? ?? true,
     isDone: data['isDone'] as bool? ?? false,
     lastCompletedAt: _dateTimeFromTimestamp(data['lastCompletedAt']),
-    effort: _enumFromName(
-      ChoreEffort.values,
-      data['effort'],
-      ChoreEffort.medium,
-    ),
     createdAt: _dateTimeFromTimestamp(data['createdAt']) ?? DateTime.now(),
   );
 }
@@ -135,7 +134,6 @@ Map<String, dynamic> _choreToDocument(Chore chore) {
     'isActive': chore.isActive,
     'isDone': chore.isDone,
     'lastCompletedAt': _timestampFromDateTime(chore.lastCompletedAt),
-    'effort': chore.effort.name,
     'createdAt': _timestampFromDateTime(chore.createdAt),
   };
 }
@@ -144,6 +142,17 @@ T _enumFromName<T extends Enum>(List<T> values, Object? name, T fallback) {
   if (name is! String) return fallback;
   for (final value in values) {
     if (value.name == name) return value;
+  }
+  return fallback;
+}
+
+String _knownValue(Object? value, List<String> allowedValues, String fallback) {
+  if (value is! String) return fallback;
+  final trimmed = value.trim();
+  for (final allowedValue in allowedValues) {
+    if (allowedValue.toLowerCase() == trimmed.toLowerCase()) {
+      return allowedValue;
+    }
   }
   return fallback;
 }
