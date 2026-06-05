@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/upcoming_events/application/upcoming_events_providers.dart';
 import 'package:habi/features/upcoming_events/data/upcoming_event.dart';
@@ -73,17 +74,14 @@ class _EventDayGroup extends StatelessWidget {
           ),
         ),
         context.gapSM,
-        GlassContainer(
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: events.length,
-            separatorBuilder: (context, index) =>
-                Divider(height: 1, color: context.colorScheme.outlineVariant),
-            itemBuilder: (context, index) {
-              return _UpcomingEventTile(event: events[index]);
-            },
-          ),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: events.length,
+          separatorBuilder: (_, _) => context.gapSM,
+          itemBuilder: (context, index) {
+            return _UpcomingEventTile(event: events[index]);
+          },
         ),
       ],
     );
@@ -99,37 +97,96 @@ class _UpcomingEventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = upcomingEventCategoryColor(context, event.category);
 
-    return ListTile(
-      minVerticalPadding: 10,
-      leading: CircleAvatar(
-        radius: 18,
-        backgroundColor: color.withValues(alpha: 0.16),
-        foregroundColor: color,
-        child: UpcomingEventCategoryIcon(category: event.category),
+    return Material(
+      color: context.colorScheme.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(
+        borderRadius: context.radiusSM,
+        side: BorderSide(color: context.colorScheme.outlineVariant),
       ),
-      title: Text(
-        event.title,
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: context.colorScheme.secondary,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      subtitle: Text(
-        [
-          formatUpcomingEventTimeSpan(event),
-          if (event.description != null) event.description!,
-        ].join(' - '),
-        style: context.textTheme.bodySmall?.copyWith(
-          color: context.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      trailing: Chip(
-        label: Text(upcomingEventCategoryLabel(event.category)),
-        backgroundColor: color.withValues(alpha: 0.12),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
-        labelStyle: context.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(width: 3, color: color),
+            Padding(
+              padding: const EdgeInsets.all(AppConstants.spacingSM),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: context.radiusSM,
+                ),
+                child: Center(
+                  child: UpcomingEventCategoryIcon(
+                    category: event.category,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: AppConstants.spacingSM,
+                  right: AppConstants.spacingSM,
+                  bottom: AppConstants.spacingSM,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            event.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              color: context.colorScheme.secondary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        context.gapSM,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppConstants.spacingSM,
+                            vertical: AppConstants.spacingXS,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.colorScheme.surfaceContainerHighest,
+                            borderRadius: context.radiusXS,
+                          ),
+                          child: Text(
+                            formatUpcomingEventTimeSpan(event),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.labelSmall?.copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (event.description != null) ...[
+                      context.gapXS,
+                      Text(
+                        event.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
