@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/shared/widgets/sidebar_menu.dart';
 
 class ShellLayout extends StatelessWidget {
@@ -11,18 +12,24 @@ class ShellLayout extends StatelessWidget {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('lib/assets/images/bg.webp'),
-            fit: BoxFit.cover,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFFF5CAC9),
+              const Color(0xFFE8DDD8),
+              const Color(0xFFDADFCE),
+            ],
+            stops: const [0, 0.48, 1],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(AppConstants.spacingMD),
             child: Row(
-              spacing: 16,
+              spacing: AppConstants.spacingMD,
               children: [
-                SidebarMenu(),
+                const SidebarMenu(),
                 Expanded(child: child),
               ],
             ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
-import 'package:habi/features/dashboard/widgets/reminders_section.dart';
+import 'package:habi/features/dashboard/widgets/active_chores_section.dart';
+import 'package:habi/features/upcoming_events/presentation/upcoming_events_section.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,14 +17,8 @@ class _DashboardPageState extends State<DashboardPage> {
     return Row(
       spacing: AppConstants.spacingMD,
       children: [
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(width: 1, color: Colors.black),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Center(child: Text('Dashboard')),
-        ).expanded(flex: 2),
-        RemaindersSection().expanded(flex: 1),
+        ActiveChoresSection().expanded(flex: 2),
+        UpcomingEventsSection().expanded(flex: 1),
       ],
     );
   }
