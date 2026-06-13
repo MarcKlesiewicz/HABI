@@ -461,7 +461,7 @@ class _AgendaEventTile extends StatelessWidget {
           radius: 18,
           backgroundColor: color.withValues(alpha: 0.16),
           foregroundColor: color,
-          child: Icon(upcomingEventCategoryIcon(event.category), size: 20),
+          child: UpcomingEventCategoryIcon(category: event.category),
         ),
         title: Text(
           event.title,
@@ -535,6 +535,7 @@ Future<void> _showEventDialog(
         (event?.startsAt ?? initialDate).add(const Duration(hours: 1)),
   );
   var category = event?.category ?? UpcomingEventCategory.personal;
+  var recurrence = event?.recurrence ?? UpcomingEventRecurrence.none;
 
   await showDialog<void>(
     context: context,
@@ -614,6 +615,21 @@ Future<void> _showEventDialog(
                       },
                     ),
                     context.gapMD,
+                    DropdownButtonFormField<UpcomingEventRecurrence>(
+                      initialValue: recurrence,
+                      decoration: const InputDecoration(labelText: 'Repeat'),
+                      items: UpcomingEventRecurrence.values.map((value) {
+                        return DropdownMenuItem(
+                          value: value,
+                          child: Text(_recurrenceLabel(value)),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setDialogState(() => recurrence = value);
+                      },
+                    ),
+                    context.gapMD,
                     _DialogActionButton(
                       icon: Icons.calendar_today_outlined,
                       label: formatEventDate(selectedDate),
@@ -673,12 +689,13 @@ Future<void> _showEventDialog(
                   }
 
                   final savedEvent = UpcomingEvent(
-                    id: event?.id ?? nextUpcomingEventId(),
+                    id: event?.editableId ?? nextUpcomingEventId(),
                     title: title,
                     startsAt: startsAt,
                     endsAt: endsAt,
                     description: _optionalText(descriptionController.text),
                     category: category,
+                    recurrence: recurrence,
                     createdAt: event?.createdAt ?? DateTime.now(),
                   );
 
@@ -785,3 +802,10 @@ const _editableCategories = <UpcomingEventCategory>[
   UpcomingEventCategory.appointment,
   UpcomingEventCategory.other,
 ];
+
+String _recurrenceLabel(UpcomingEventRecurrence recurrence) {
+  return switch (recurrence) {
+    UpcomingEventRecurrence.none => 'Does not repeat',
+    UpcomingEventRecurrence.yearly => 'Yearly',
+  };
+}

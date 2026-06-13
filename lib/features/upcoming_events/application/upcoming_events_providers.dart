@@ -16,9 +16,14 @@ final manualUpcomingEventsProvider = StreamProvider<List<UpcomingEvent>>((ref) {
 final calendarEventsProvider = StreamProvider<List<UpcomingEvent>>((ref) {
   final manualEvents =
       ref.watch(manualUpcomingEventsProvider).value ?? const [];
+  final now = DateTime.now();
 
   final events = <UpcomingEvent>[
-    ...manualEvents,
+    ..._expandManualEvents(
+      manualEvents,
+      startYear: now.year - 5,
+      endYear: now.year + 10,
+    ),
     ...AirbnbReservationStore.upcoming.expand(_eventsFromReservation),
   ];
 
@@ -40,6 +45,57 @@ final upcomingEventsProvider = StreamProvider<List<UpcomingEvent>>((ref) {
   );
 });
 
+Iterable<UpcomingEvent> _expandManualEvents(
+  List<UpcomingEvent> events, {
+  required int startYear,
+  required int endYear,
+}) sync* {
+  for (final event in events) {
+    if (event.recurrence != UpcomingEventRecurrence.yearly) {
+      yield event;
+      continue;
+    }
+
+    for (var year = startYear; year <= endYear; year++) {
+      final startsAt = _sameDateInYear(event.startsAt, year);
+      if (startsAt == null) continue;
+
+      final endsAt = event.endsAt == null
+          ? null
+          : startsAt.add(event.endsAt!.difference(event.startsAt));
+
+      yield event.copyWith(
+        id: '${event.id}-$year',
+        startsAt: startsAt,
+        endsAt: endsAt,
+        clearEndsAt: endsAt == null,
+        sourceId: event.id,
+      );
+    }
+  }
+}
+
+DateTime? _sameDateInYear(DateTime date, int year) {
+  if (date.month == DateTime.february && date.day == 29 && !_isLeapYear(year)) {
+    return null;
+  }
+
+  return DateTime(
+    year,
+    date.month,
+    date.day,
+    date.hour,
+    date.minute,
+    date.second,
+    date.millisecond,
+    date.microsecond,
+  );
+}
+
+bool _isLeapYear(int year) {
+  return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+}
+
 final upcomingEventControllerProvider = Provider<UpcomingEventController>((
   ref,
 ) {
@@ -51,10 +107,15 @@ Iterable<UpcomingEvent> _eventsFromReservation(
 ) sync* {
   yield UpcomingEvent(
     id: 'airbnb-${reservation.confirmationCode}-check-in',
-    title: 'Airbnb check-in',
-    startsAt: reservation.checkIn,
+    title: reservation.guest,
+    startsAt: DateTime(
+      reservation.checkIn.year,
+      reservation.checkIn.month,
+      reservation.checkIn.day,
+      15,
+    ),
     description:
-        '${reservation.guest}, ${reservation.nights} night${reservation.nights == 1 ? '' : 's'}',
+        '${reservation.nights} ${reservation.nights == 1 ? 'night' : 'nights'} - ${reservation.guestCount} ${reservation.guestCount == 1 ? 'person' : 'people'}',
     source: UpcomingEventSource.airbnb,
     category: UpcomingEventCategory.airbnb,
     sourceId: reservation.confirmationCode,
@@ -78,11 +139,13 @@ class UpcomingEventController {
 
   Future<void> updateEvent(UpcomingEvent event) {
     if (!event.canEdit) return Future.value();
-    return _repository.updateEvent(event);
+    return _repository.updateEvent(
+      event.copyWith(id: event.editableId, clearSourceId: true),
+    );
   }
 
   Future<void> deleteEvent(UpcomingEvent event) {
     if (!event.canEdit) return Future.value();
-    return _repository.deleteEvent(event.id);
+    return _repository.deleteEvent(event.editableId);
   }
 }

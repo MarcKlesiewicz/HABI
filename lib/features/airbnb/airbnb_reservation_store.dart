@@ -4,6 +4,7 @@ class AirbnbReservation {
   final DateTime checkIn;
   final DateTime checkOut;
   final int nights;
+  final int guestCount;
   final String guest;
   final String listing;
   final String currency;
@@ -15,6 +16,7 @@ class AirbnbReservation {
     required this.checkIn,
     required this.checkOut,
     required this.nights,
+    required this.guestCount,
     required this.guest,
     required this.listing,
     required this.currency,
@@ -32,6 +34,7 @@ class AirbnbReservationStore {
       checkIn: DateTime(2026, 6, 5),
       checkOut: DateTime(2026, 6, 7),
       nights: 2,
+      guestCount: 1,
       guest: 'Pernille Sutrow',
       listing: 'Landidyl tæt på skov og by',
       currency: 'DKK',
@@ -43,6 +46,7 @@ class AirbnbReservationStore {
       checkIn: DateTime(2026, 6, 18),
       checkOut: DateTime(2026, 6, 19),
       nights: 1,
+      guestCount: 1,
       guest: 'Anne Mette Stevn',
       listing: 'Landidyl tæt på skov og by',
       currency: 'DKK',
@@ -54,6 +58,7 @@ class AirbnbReservationStore {
       checkIn: DateTime(2026, 6, 19),
       checkOut: DateTime(2026, 6, 21),
       nights: 2,
+      guestCount: 1,
       guest: 'Martin Bo Sjøberg',
       listing: 'Landidyl tæt på skov og by',
       currency: 'DKK',
@@ -65,6 +70,7 @@ class AirbnbReservationStore {
       checkIn: DateTime(2026, 7, 28),
       checkOut: DateTime(2026, 7, 30),
       nights: 2,
+      guestCount: 1,
       guest: 'Mike Vos',
       listing: 'Landidyl tæt på skov og by',
       currency: 'DKK',
@@ -76,6 +82,7 @@ class AirbnbReservationStore {
       checkIn: DateTime(2026, 8, 9),
       checkOut: DateTime(2026, 8, 10),
       nights: 1,
+      guestCount: 1,
       guest: 'Jana Brandejsova',
       listing: 'Landidyl tæt på skov og by',
       currency: 'DKK',
@@ -87,6 +94,7 @@ class AirbnbReservationStore {
       checkIn: DateTime(2026, 8, 26),
       checkOut: DateTime(2026, 8, 27),
       nights: 1,
+      guestCount: 1,
       guest: 'Marie Hoff',
       listing: 'Landidyl tæt på skov og by',
       currency: 'DKK',
