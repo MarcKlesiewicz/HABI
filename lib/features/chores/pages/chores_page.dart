@@ -9,10 +9,6 @@ import 'package:habi/shared/widgets/glass_container.dart';
 
 enum _ChoreView { due, todos, recurring, areas }
 
-enum _StatusFilter { all, open, completed, overdue }
-
-enum _SortOption { dueDate, area, createdDate }
-
 class ChoresPage extends ConsumerStatefulWidget {
   const ChoresPage({super.key});
 
@@ -22,11 +18,6 @@ class ChoresPage extends ConsumerStatefulWidget {
 
 class _ChoresPageState extends ConsumerState<ChoresPage> {
   _ChoreView _view = _ChoreView.due;
-  ChoreType? _typeFilter;
-  String? _areaFilter;
-  String? _assignedToFilter;
-  _StatusFilter _statusFilter = _StatusFilter.open;
-  _SortOption _sortOption = _SortOption.dueDate;
 
   @override
   Widget build(BuildContext context) {
@@ -39,63 +30,37 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
         child: Center(child: Text('Could not load chores: $error')),
       ),
       data: (chores) {
-        final filtered = _applyFilters(_choresForView(chores));
-        final sorted = _sortChores(filtered);
+        final sorted = _sortChores(_choresForView(chores));
 
-        return GlassContainer(
-          isElevated: true,
-          child: Padding(
-            padding: context.paddingLG,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Header(
-                  chores: chores,
-                  onAddPressed: () => _showChoreDialog(context, ref),
-                ),
-                context.gapLG,
-                _ViewTabs(
-                  selectedView: _view,
-                  onViewChanged: (view) {
-                    setState(() {
-                      _view = view;
-                      _typeFilter = null;
-                      if (view == _ChoreView.todos) {
-                        _sortOption = _SortOption.createdDate;
-                      } else if (view == _ChoreView.areas) {
-                        _sortOption = _SortOption.area;
-                      } else {
-                        _sortOption = _SortOption.dueDate;
-                      }
-                    });
-                  },
-                ),
-                context.gapMD,
-                _FilterBar(
-                  typeFilter: _typeFilter,
-                  areaFilter: _areaFilter,
-                  assignedToFilter: _assignedToFilter,
-                  statusFilter: _statusFilter,
-                  sortOption: _sortOption,
-                  onTypeChanged: (value) => setState(() => _typeFilter = value),
-                  onAreaChanged: (value) => setState(() => _areaFilter = value),
-                  onAssignedChanged: (value) {
-                    setState(() => _assignedToFilter = value);
-                  },
-                  onStatusChanged: (value) {
-                    setState(() => _statusFilter = value);
-                  },
-                  onSortChanged: (value) => setState(() => _sortOption = value),
-                ),
-                context.gapMD,
-                Expanded(
-                  child: _view == _ChoreView.areas
-                      ? _AreasList(chores: sorted)
-                      : _ChoreList(chores: sorted, view: _view),
-                ),
-              ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GlassContainer(
+              isElevated: true,
+              padding: context.paddingLG,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Header(
+                    chores: chores,
+                    onAddPressed: () => _showChoreDialog(context, ref),
+                  ),
+                  context.gapLG,
+                  _ViewTabs(
+                    selectedView: _view,
+                    onViewChanged: (view) => setState(() => _view = view),
+                  ),
+                ],
+              ),
             ),
-          ),
+            context.gapLG,
+            Expanded(
+              child: _view == _ChoreView.areas
+                  ? _AreasList(chores: sorted)
+                  : _ChoreList(chores: sorted, view: _view),
+            ),
+          ],
         );
       },
     );
@@ -110,6 +75,7 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
       case _ChoreView.due:
         return chores
             .where((chore) {
+              if (chore.isDone) return false;
               final due = chore.nextDue;
               if (due == null) return false;
               final dueDay = DateTime(due.year, due.month, due.day);
@@ -119,51 +85,30 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
             .toList(growable: false);
       case _ChoreView.todos:
         return chores
-            .where((chore) => chore.type == ChoreType.todo)
+            .where((chore) => chore.type == ChoreType.todo && !chore.isDone)
             .toList(growable: false);
       case _ChoreView.recurring:
         return chores
-            .where((chore) => chore.type == ChoreType.recurring)
+            .where(
+              (chore) => chore.type == ChoreType.recurring && !chore.isDone,
+            )
             .toList(growable: false);
       case _ChoreView.areas:
-        return chores;
+        return chores.where((chore) => !chore.isDone).toList(growable: false);
     }
-  }
-
-  List<Chore> _applyFilters(List<Chore> chores) {
-    final now = DateTime.now();
-    return chores
-        .where((chore) {
-          if (_typeFilter != null && chore.type != _typeFilter) return false;
-          if (_areaFilter != null && chore.area != _areaFilter) return false;
-          if (_assignedToFilter != null &&
-              chore.assignedTo != _assignedToFilter) {
-            return false;
-          }
-          switch (_statusFilter) {
-            case _StatusFilter.all:
-              return true;
-            case _StatusFilter.open:
-              return !chore.isDone;
-            case _StatusFilter.completed:
-              return chore.isDone;
-            case _StatusFilter.overdue:
-              return chore.isOverdue(now);
-          }
-        })
-        .toList(growable: false);
   }
 
   List<Chore> _sortChores(List<Chore> chores) {
     final sorted = List<Chore>.from(chores);
     sorted.sort((a, b) {
-      switch (_sortOption) {
-        case _SortOption.dueDate:
+      switch (_view) {
+        case _ChoreView.due:
+        case _ChoreView.recurring:
           return _compareNullableDates(a.nextDue, b.nextDue);
-        case _SortOption.area:
+        case _ChoreView.areas:
           final area = a.area.compareTo(b.area);
           return area == 0 ? _compareNullableDates(a.nextDue, b.nextDue) : area;
-        case _SortOption.createdDate:
+        case _ChoreView.todos:
           return b.createdAt.compareTo(a.createdAt);
       }
     });
@@ -267,116 +212,6 @@ class _ViewTabs extends StatelessWidget {
         selected: {selectedView},
         onSelectionChanged: (selection) {
           onViewChanged(selection.first);
-        },
-      ),
-    );
-  }
-}
-
-class _FilterBar extends StatelessWidget {
-  final ChoreType? typeFilter;
-  final String? areaFilter;
-  final String? assignedToFilter;
-  final _StatusFilter statusFilter;
-  final _SortOption sortOption;
-  final ValueChanged<ChoreType?> onTypeChanged;
-  final ValueChanged<String?> onAreaChanged;
-  final ValueChanged<String?> onAssignedChanged;
-  final ValueChanged<_StatusFilter> onStatusChanged;
-  final ValueChanged<_SortOption> onSortChanged;
-
-  const _FilterBar({
-    required this.typeFilter,
-    required this.areaFilter,
-    required this.assignedToFilter,
-    required this.statusFilter,
-    required this.sortOption,
-    required this.onTypeChanged,
-    required this.onAreaChanged,
-    required this.onAssignedChanged,
-    required this.onStatusChanged,
-    required this.onSortChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppConstants.spacingSM,
-      runSpacing: AppConstants.spacingSM,
-      children: [
-        _FilterMenu<ChoreType?>(
-          label: 'Type',
-          value: typeFilter,
-          options: const [null, ...ChoreType.values],
-          optionLabel: (value) =>
-              value == null ? 'All types' : _typeLabel(value),
-          onChanged: onTypeChanged,
-        ),
-        _FilterMenu<String?>(
-          label: 'Area',
-          value: areaFilter,
-          options: const [null, ...choreAreas],
-          optionLabel: (value) => value ?? 'All areas',
-          onChanged: onAreaChanged,
-        ),
-        _FilterMenu<String?>(
-          label: 'Person',
-          value: assignedToFilter,
-          options: const [null, ...choreOwners],
-          optionLabel: (value) => value ?? 'Anyone',
-          onChanged: onAssignedChanged,
-        ),
-        _FilterMenu<_StatusFilter>(
-          label: 'Status',
-          value: statusFilter,
-          options: _StatusFilter.values,
-          optionLabel: _statusLabel,
-          onChanged: onStatusChanged,
-        ),
-        _FilterMenu<_SortOption>(
-          label: 'Sort',
-          value: sortOption,
-          options: _SortOption.values,
-          optionLabel: _sortLabel,
-          onChanged: onSortChanged,
-        ),
-      ],
-    );
-  }
-}
-
-class _FilterMenu<T> extends StatelessWidget {
-  final String label;
-  final T value;
-  final List<T> options;
-  final String Function(T value) optionLabel;
-  final ValueChanged<T> onChanged;
-
-  const _FilterMenu({
-    required this.label,
-    required this.value,
-    required this.options,
-    required this.optionLabel,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: DropdownButtonFormField<T>(
-        initialValue: value,
-        isExpanded: true,
-        decoration: InputDecoration(labelText: label),
-        items: options.map((option) {
-          return DropdownMenuItem<T>(
-            value: option,
-            child: Text(optionLabel(option), overflow: TextOverflow.ellipsis),
-          );
-        }).toList(),
-        onChanged: (value) {
-          if (value == null && !options.contains(null)) return;
-          onChanged(value as T);
         },
       ),
     );
@@ -1283,39 +1118,6 @@ String _viewLabel(_ChoreView view) {
       return 'Recurring';
     case _ChoreView.areas:
       return 'Area';
-  }
-}
-
-String _typeLabel(ChoreType type) {
-  switch (type) {
-    case ChoreType.recurring:
-      return 'Recurring';
-    case ChoreType.todo:
-      return 'Todo';
-  }
-}
-
-String _statusLabel(_StatusFilter status) {
-  switch (status) {
-    case _StatusFilter.all:
-      return 'All status';
-    case _StatusFilter.open:
-      return 'Open';
-    case _StatusFilter.completed:
-      return 'Completed';
-    case _StatusFilter.overdue:
-      return 'Overdue';
-  }
-}
-
-String _sortLabel(_SortOption sort) {
-  switch (sort) {
-    case _SortOption.dueDate:
-      return 'Due date';
-    case _SortOption.area:
-      return 'Area';
-    case _SortOption.createdDate:
-      return 'Created';
   }
 }
 
