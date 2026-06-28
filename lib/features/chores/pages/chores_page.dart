@@ -206,8 +206,8 @@ class _Header extends StatelessWidget {
               Text(
                 'Chores',
                 style: context.textTheme.headlineSmall?.copyWith(
-                  color: context.colorScheme.secondary,
-                  fontWeight: FontWeight.bold,
+                  color: context.colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               context.gapXS,
@@ -245,13 +245,15 @@ class _ViewTabs extends StatelessWidget {
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return context.colorScheme.primary;
+              return context.colorScheme.secondary;
             }
-            return context.colorScheme.surfaceContainerHigh;
+            return context.colorScheme.surfaceContainerLowest.withValues(
+              alpha: 0.46,
+            );
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return context.colorScheme.onPrimary;
+              return context.colorScheme.onSecondary;
             }
             return context.colorScheme.onSurfaceVariant;
           }),
@@ -469,128 +471,136 @@ class _ChoreTile extends ConsumerWidget {
     final overdue = chore.isOverdue(DateTime.now());
 
     return GlassContainer(
-      child: Padding(
-        padding: context.paddingMD,
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: overdue
-                    ? context.colorScheme.errorContainer
-                    : chore.type == ChoreType.todo
-                    ? context.colorScheme.surfaceContainerHigh
-                    : recurringChoreColor(
-                        context,
-                        chore.colorKey,
-                      ).withValues(alpha: 0.2),
-                borderRadius: context.radiusSM,
+      padding: context.paddingMD,
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color:
+                  (overdue
+                          ? context.colorScheme.error
+                          : chore.type == ChoreType.todo
+                          ? context.colorScheme.primary
+                          : recurringChoreColor(context, chore.colorKey))
+                      .withValues(alpha: 0.13),
+              borderRadius: context.radiusLG,
+              border: Border.all(
+                color:
+                    (overdue
+                            ? context.colorScheme.error
+                            : chore.type == ChoreType.todo
+                            ? context.colorScheme.primary
+                            : recurringChoreColor(context, chore.colorKey))
+                        .withValues(alpha: 0.16),
               ),
-              child: Icon(switch (chore.type) {
+            ),
+            child: Icon(
+              switch (chore.type) {
                 ChoreType.recurring => recurringChoreIcon(chore.iconKey),
                 ChoreType.todo =>
                   chore.nextDue == null ? Icons.inventory_2 : Icons.task_alt,
-              }, color: context.colorScheme.secondary),
-            ),
-            context.gapMD,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          chore.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.titleMedium?.copyWith(
-                            color: context.colorScheme.secondary,
-                            fontWeight: FontWeight.bold,
-                            decoration: chore.isDone
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                          ),
-                        ),
-                      ),
-                      _TypePill(chore: chore),
-                    ],
-                  ),
-                  context.gapSM,
-                  Wrap(
-                    spacing: AppConstants.spacingSM,
-                    runSpacing: AppConstants.spacingXS,
-                    children: [
-                      _ChoreMeta(icon: Icons.place, label: chore.area),
-                      _ChoreMeta(icon: Icons.person, label: chore.assignedTo),
-                      _ChoreMeta(
-                        icon: Icons.calendar_today,
-                        label: _dateMetaLabel(chore),
-                        isEmphasized: overdue,
-                      ),
-                      if (isRecurring)
-                        _ChoreMeta(
-                          icon: Icons.schedule,
-                          label: chore.scheduleLabel,
-                        ),
-                      if (isRecurring)
-                        _ChoreMeta(
-                          icon:
-                              chore.recurrenceBehavior ==
-                                  RecurrenceBehavior.fixed
-                              ? Icons.lock_clock
-                              : Icons.update,
-                          label:
-                              chore.recurrenceBehavior ==
-                                  RecurrenceBehavior.fixed
-                              ? 'Fixed'
-                              : 'Flexible',
-                        ),
-                      _ChoreMeta(
-                        icon: chore.isDone
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        label: chore.isDone ? 'Completed' : 'Open',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            context.gapSM,
-            if (isTodo)
-              Checkbox(
-                value: chore.isDone,
-                onChanged: (_) => _toggleTodoDone(ref, chore),
-              )
-            else
-              IconButton(
-                tooltip: 'Complete and schedule next',
-                onPressed: chore.canComplete
-                    ? () =>
-                          ref.read(choreControllerProvider).completeChore(chore)
-                    : null,
-                icon: const Icon(Icons.check_circle_outline),
-              ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) {
-                if (value == 'edit') {
-                  _showChoreDialog(context, ref, chore: chore);
-                  return;
-                }
-                if (value == 'delete') {
-                  _confirmDelete(context, ref, chore);
-                }
               },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              color: overdue
+                  ? context.colorScheme.error
+                  : context.colorScheme.onSurface,
+            ),
+          ),
+          context.gapMD,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        chore.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleMedium?.copyWith(
+                          color: context.colorScheme.secondary,
+                          fontWeight: FontWeight.w800,
+                          decoration: chore.isDone
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                    _TypePill(chore: chore),
+                  ],
+                ),
+                context.gapSM,
+                Wrap(
+                  spacing: AppConstants.spacingSM,
+                  runSpacing: AppConstants.spacingXS,
+                  children: [
+                    _ChoreMeta(icon: Icons.place, label: chore.area),
+                    _ChoreMeta(icon: Icons.person, label: chore.assignedTo),
+                    _ChoreMeta(
+                      icon: Icons.calendar_today,
+                      label: _dateMetaLabel(chore),
+                      isEmphasized: overdue,
+                    ),
+                    if (isRecurring)
+                      _ChoreMeta(
+                        icon: Icons.schedule,
+                        label: chore.scheduleLabel,
+                      ),
+                    if (isRecurring)
+                      _ChoreMeta(
+                        icon:
+                            chore.recurrenceBehavior == RecurrenceBehavior.fixed
+                            ? Icons.lock_clock
+                            : Icons.update,
+                        label:
+                            chore.recurrenceBehavior == RecurrenceBehavior.fixed
+                            ? 'Fixed'
+                            : 'Flexible',
+                      ),
+                    _ChoreMeta(
+                      icon: chore.isDone
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      label: chore.isDone ? 'Completed' : 'Open',
+                    ),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+          context.gapSM,
+          if (isTodo)
+            Checkbox(
+              value: chore.isDone,
+              onChanged: (_) => _toggleTodoDone(ref, chore),
+            )
+          else
+            IconButton(
+              tooltip: 'Complete and schedule next',
+              onPressed: chore.canComplete
+                  ? () => ref.read(choreControllerProvider).completeChore(chore)
+                  : null,
+              icon: const Icon(Icons.check_circle_outline_rounded),
+            ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'edit') {
+                _showChoreDialog(context, ref, chore: chore);
+                return;
+              }
+              if (value == 'delete') {
+                _confirmDelete(context, ref, chore);
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'edit', child: Text('Edit')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -603,31 +613,15 @@ class _TypePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.spacingSM,
-        vertical: AppConstants.spacingXS,
-      ),
-      decoration: BoxDecoration(
-        color: switch (chore.type) {
-          ChoreType.recurring => recurringChoreColor(
-            context,
-            chore.colorKey,
-          ).withValues(alpha: 0.2),
-          ChoreType.todo =>
-            chore.nextDue == null
-                ? context.colorScheme.secondaryContainer
-                : context.colorScheme.tertiaryContainer,
-        },
-        borderRadius: context.radiusXS,
-      ),
-      child: Text(
-        chore.typeLabel,
-        style: context.textTheme.labelSmall?.copyWith(
-          color: context.colorScheme.secondary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return StatusChip(
+      label: chore.typeLabel,
+      color: switch (chore.type) {
+        ChoreType.recurring => recurringChoreColor(context, chore.colorKey),
+        ChoreType.todo =>
+          chore.nextDue == null
+              ? context.colorScheme.onSurfaceVariant
+              : context.colorScheme.tertiary,
+      },
     );
   }
 }
@@ -649,19 +643,11 @@ class _ChoreMeta extends StatelessWidget {
         ? context.colorScheme.error
         : context.colorScheme.onSurfaceVariant;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: context.textTheme.bodySmall?.copyWith(
-            color: color,
-            fontWeight: isEmphasized ? FontWeight.bold : null,
-          ),
-        ),
-      ],
+    return StatusChip(
+      label: label,
+      icon: icon,
+      color: color,
+      emphasized: isEmphasized,
     );
   }
 }
@@ -685,10 +671,12 @@ class _SegmentButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isSelected
-              ? context.colorScheme.primary
-              : context.colorScheme.surfaceContainerHigh,
+              ? context.colorScheme.secondary
+              : context.colorScheme.surfaceContainerLowest.withValues(
+                  alpha: 0.46,
+                ),
           foregroundColor: isSelected
-              ? context.colorScheme.onPrimary
+              ? context.colorScheme.onSecondary
               : context.colorScheme.onSurfaceVariant,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: context.radiusSM),

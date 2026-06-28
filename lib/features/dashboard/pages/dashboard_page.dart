@@ -35,11 +35,11 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      spacing: AppConstants.spacingMD,
+      spacing: AppConstants.spacingLG,
       children: [
         _DashboardToolbar(now: _now),
         Row(
-          spacing: AppConstants.spacingMD,
+          spacing: AppConstants.spacingLG,
           children: [
             ActiveChoresSection().expanded(flex: 2),
             UpcomingEventsSection().expanded(flex: 1),
@@ -63,22 +63,37 @@ class _DashboardToolbar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Text(
-              _dateLabel(now),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.textTheme.titleMedium?.copyWith(
-                color: context.colorScheme.secondary,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Home',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.headlineLarge?.copyWith(
+                    color: context.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                context.gapXS,
+                Text(
+                  _dateLabel(now),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
           Text(
             _timeLabel(now),
             style: context.textTheme.displaySmall?.copyWith(
-              color: context.colorScheme.secondary,
+              color: context.colorScheme.onSurface,
               fontWeight: FontWeight.w800,
-              height: 0.95,
+              height: 1,
             ),
           ),
         ],

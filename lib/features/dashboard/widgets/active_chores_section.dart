@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habi/config/routes/routes.dart';
-import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
@@ -32,95 +31,91 @@ class ActiveChoresSection extends ConsumerWidget {
         final attentionCount = todayChores.length + overdueChores.length;
 
         return GlassContainer(
-          child: Padding(
-            padding: context.paddingMD,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Today\'s Chores',
-                        style: context.textTheme.titleLarge?.copyWith(
-                          color: context.colorScheme.secondary,
-                          fontWeight: FontWeight.bold,
-                        ),
+          isElevated: true,
+          padding: context.paddingLG,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Today\'s Chores',
+                      style: context.textTheme.titleLarge?.copyWith(
+                        color: context.colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    Text(
-                      attentionCount.toString(),
-                      style: context.textTheme.titleMedium?.copyWith(
-                        color: context.colorScheme.secondary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                context.gapXS,
-                Text(
-                  'What needs attention today',
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
                   ),
+                  StatusChip(
+                    label: attentionCount.toString(),
+                    color: attentionCount > 0
+                        ? context.colorScheme.primary
+                        : context.colorScheme.tertiary,
+                    emphasized: attentionCount > 0,
+                  ),
+                ],
+              ),
+              context.gapXS,
+              Text(
+                'What needs attention today',
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
                 ),
-                context.gapMD,
-                if (attentionCount == 0)
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        'No chores due today',
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
+              ),
+              context.gapMD,
+              if (attentionCount == 0)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'No chores due today',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  )
-                else
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        if (overdueChores.isNotEmpty) ...[
-                          _SectionLabel(
-                            label: 'Overdue',
-                            count: overdueChores.length,
-                          ),
-                          context.gapSM,
-                          ...overdueChores.expand((chore) {
-                            return [
-                              _TodayChoreTile(chore: chore, isOverdue: true),
-                              context.gapSM,
-                            ];
-                          }),
-                          context.gapSM,
-                        ],
-                        if (todayChores.isNotEmpty) ...[
-                          _SectionLabel(
-                            label: 'Today',
-                            count: todayChores.length,
-                          ),
-                          context.gapSM,
-                          ...todayChores.expand((chore) {
-                            return [
-                              _TodayChoreTile(chore: chore),
-                              context.gapSM,
-                            ];
-                          }),
-                        ],
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView(
+                    children: [
+                      if (overdueChores.isNotEmpty) ...[
+                        _SectionLabel(
+                          label: 'Overdue',
+                          count: overdueChores.length,
+                        ),
+                        context.gapSM,
+                        ...overdueChores.expand((chore) {
+                          return [
+                            _TodayChoreTile(chore: chore, isOverdue: true),
+                            context.gapSM,
+                          ];
+                        }),
+                        context.gapSM,
                       ],
-                    ),
-                  ),
-                context.gapSM,
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.go(AppRoutePath.chores),
-                    icon: const Icon(Icons.open_in_new, size: 16),
-                    label: const Text('Open chore manager'),
+                      if (todayChores.isNotEmpty) ...[
+                        _SectionLabel(
+                          label: 'Today',
+                          count: todayChores.length,
+                        ),
+                        context.gapSM,
+                        ...todayChores.expand((chore) {
+                          return [_TodayChoreTile(chore: chore), context.gapSM];
+                        }),
+                      ],
+                    ],
                   ),
                 ),
-              ],
-            ),
+              context.gapSM,
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go(AppRoutePath.chores),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('Open chore manager'),
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -141,8 +136,8 @@ class _SectionLabel extends StatelessWidget {
         Text(
           label,
           style: context.textTheme.labelLarge?.copyWith(
-            color: context.colorScheme.secondary,
-            fontWeight: FontWeight.bold,
+            color: context.colorScheme.onSurface,
+            fontWeight: FontWeight.w800,
           ),
         ),
         context.gapSM,
@@ -166,83 +161,66 @@ class _TodayChoreTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GlassContainer(
-      child: Padding(
-        padding: context.paddingSM,
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isOverdue
-                    ? context.colorScheme.errorContainer
-                    : chore.type == ChoreType.recurring
-                    ? recurringChoreColor(
-                        context,
-                        chore.colorKey,
-                      ).withValues(alpha: 0.22)
-                    : context.colorScheme.primary.withValues(alpha: 0.22),
-                borderRadius: context.radiusSM,
-              ),
-              child: Icon(
-                chore.type == ChoreType.recurring
-                    ? recurringChoreIcon(chore.iconKey)
-                    : Icons.task_alt,
-                size: 20,
-                color: context.colorScheme.secondary,
-              ),
-            ),
-            context.gapSM,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    chore.title,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: context.colorScheme.secondary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  context.gapXS,
-                  Text(
-                    '${chore.scheduleLabel} - ${chore.assignedTo} - ${_formatDue(chore.nextDue)}',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: isOverdue
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color:
+                  (isOverdue
                           ? context.colorScheme.error
-                          : context.colorScheme.onSurfaceVariant,
-                      fontWeight: isOverdue ? FontWeight.bold : null,
-                    ),
+                          : chore.type == ChoreType.recurring
+                          ? recurringChoreColor(context, chore.colorKey)
+                          : context.colorScheme.primary)
+                      .withValues(alpha: 0.14),
+              borderRadius: context.radiusLG,
+            ),
+            child: Icon(
+              chore.type == ChoreType.recurring
+                  ? recurringChoreIcon(chore.iconKey)
+                  : Icons.task_alt,
+              size: 20,
+              color: isOverdue
+                  ? context.colorScheme.error
+                  : context.colorScheme.onSurface,
+            ),
+          ),
+          context.gapSM,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  chore.title,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
                   ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.spacingSM,
-                vertical: AppConstants.spacingXS,
-              ),
-              decoration: BoxDecoration(
-                color: context.colorScheme.primary.withValues(alpha: 0.22),
-                borderRadius: context.radiusXS,
-              ),
-              child: Text(
-                chore.area,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: context.colorScheme.secondary,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
+                context.gapXS,
+                Text(
+                  '${chore.scheduleLabel} - ${chore.assignedTo} - ${_formatDue(chore.nextDue)}',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: isOverdue
+                        ? context.colorScheme.error
+                        : context.colorScheme.onSurfaceVariant,
+                    fontWeight: isOverdue ? FontWeight.bold : null,
+                  ),
+                ),
+              ],
             ),
-            context.gapSM,
-            IconButton(
-              tooltip: 'Mark completed',
-              onPressed: () =>
-                  ref.read(choreControllerProvider).completeChore(chore),
-              icon: const Icon(Icons.check_circle_outline),
-            ),
-          ],
-        ),
+          ),
+          StatusChip(label: chore.area, color: context.colorScheme.tertiary),
+          context.gapSM,
+          IconButton(
+            tooltip: 'Mark completed',
+            onPressed: () =>
+                ref.read(choreControllerProvider).completeChore(chore),
+            icon: const Icon(Icons.check_circle_outline_rounded),
+          ),
+        ],
       ),
     );
   }

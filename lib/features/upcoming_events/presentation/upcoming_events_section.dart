@@ -21,8 +21,8 @@ class UpcomingEventsSection extends ConsumerWidget {
           Text(
             'Upcoming Events',
             style: context.textTheme.titleLarge?.copyWith(
-              color: context.colorScheme.secondary,
-              fontWeight: FontWeight.bold,
+              color: context.colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
             ),
           ),
           context.gapMD,
@@ -98,10 +98,14 @@ class _UpcomingEventTile extends StatelessWidget {
     final color = upcomingEventCategoryColor(context, event.category);
 
     return Material(
-      color: context.colorScheme.surfaceContainerHigh,
+      color: context.colorScheme.surfaceContainerLowest.withValues(alpha: 0.48),
       shape: RoundedRectangleBorder(
-        borderRadius: context.radiusSM,
-        side: BorderSide(color: context.colorScheme.outlineVariant),
+        borderRadius: context.radiusLG,
+        side: BorderSide(
+          color: context.colorScheme.surfaceContainerLowest.withValues(
+            alpha: 0.62,
+          ),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
@@ -109,13 +113,13 @@ class _UpcomingEventTile extends StatelessWidget {
           children: [
             Container(width: 3, color: color),
             Padding(
-              padding: const EdgeInsets.all(AppConstants.spacingSM),
+              padding: const EdgeInsets.all(10),
               child: Container(
-                width: 38,
-                height: 38,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: context.radiusSM,
+                  color: color.withValues(alpha: 0.13),
+                  borderRadius: context.radiusLG,
                 ),
                 child: Center(
                   child: UpcomingEventCategoryIcon(
@@ -144,30 +148,15 @@ class _UpcomingEventTile extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: context.textTheme.bodyMedium?.copyWith(
-                              color: context.colorScheme.secondary,
+                              color: context.colorScheme.onSurface,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
                         context.gapSM,
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppConstants.spacingSM,
-                            vertical: AppConstants.spacingXS,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.colorScheme.surfaceContainerHighest,
-                            borderRadius: context.radiusXS,
-                          ),
-                          child: Text(
-                            formatUpcomingEventTimeSpan(event),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.labelSmall?.copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        StatusChip(
+                          label: formatUpcomingEventTimeSpan(event),
+                          color: color,
                         ),
                       ],
                     ),

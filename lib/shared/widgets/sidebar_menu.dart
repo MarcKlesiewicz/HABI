@@ -15,31 +15,48 @@ class SidebarMenu extends StatelessWidget {
 
     return GlassContainer(
       isElevated: true,
+      padding: const EdgeInsets.all(AppConstants.spacingSM),
       child: SizedBox(
-        width: 64,
+        width: 68,
         height: double.infinity,
         child: Column(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: context.colorScheme.primaryContainer,
-                borderRadius: context.radiusSM,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.colorScheme.surfaceContainerLowest.withValues(
+                      alpha: 0.82,
+                    ),
+                    context.colorScheme.primaryContainer.withValues(
+                      alpha: 0.55,
+                    ),
+                  ],
+                ),
+                borderRadius: context.radiusLG,
+                border: Border.all(
+                  color: context.colorScheme.surfaceContainerLowest.withValues(
+                    alpha: 0.68,
+                  ),
+                ),
               ),
               child: Center(
                 child: SvgPicture.asset(
                   'lib/assets/svg/habi_logo.svg',
-                  height: 26,
+                  height: 27,
                 ),
               ),
             ),
-            const SizedBox(height: AppConstants.spacingLG),
+            const SizedBox(height: AppConstants.spacingXL),
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _NavIconButton(
-                  icon: Icons.dashboard,
+                  icon: Icons.dashboard_rounded,
                   tooltip: 'Dashboard',
                   isSelected: currentPath == AppRoutePath.dashboard,
                   onPressed: () => context.go(AppRoutePath.dashboard),
@@ -53,14 +70,14 @@ class SidebarMenu extends StatelessWidget {
                 ),
                 const SizedBox(height: AppConstants.spacingSM),
                 _NavIconButton(
-                  icon: Icons.calendar_month,
+                  icon: Icons.calendar_month_rounded,
                   tooltip: 'Calendar',
                   isSelected: currentPath == AppRoutePath.calendar,
                   onPressed: () => context.go(AppRoutePath.calendar),
                 ),
                 const SizedBox(height: AppConstants.spacingSM),
                 _NavIconButton(
-                  icon: Icons.cleaning_services,
+                  icon: Icons.cleaning_services_rounded,
                   tooltip: 'Chores',
                   isSelected: currentPath == AppRoutePath.chores,
                   onPressed: () => context.go(AppRoutePath.chores),
@@ -69,7 +86,7 @@ class SidebarMenu extends StatelessWidget {
             ),
           ],
         ),
-      ).paddingAll(AppConstants.spacingSM),
+      ),
     );
   }
 }
@@ -91,34 +108,56 @@ class _NavIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final foreground = isSelected
+        ? context.colorScheme.onSurface
+        : context.colorScheme.onSurfaceVariant;
+
     return SizedBox(
-      width: 44,
-      height: 44,
-      child: IconButton(
-        tooltip: tooltip,
-        onPressed: onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: isSelected
-              ? context.colorScheme.primary
-              : Colors.transparent,
-          foregroundColor: isSelected
-              ? context.colorScheme.onPrimary
-              : context.colorScheme.onSurfaceVariant,
-          shape: RoundedRectangleBorder(borderRadius: context.radiusSM),
+      width: 48,
+      height: 48,
+      child: AnimatedContainer(
+        duration: AppConstants.durationFast,
+        curve: AppConstants.curveDefault,
+        decoration: BoxDecoration(
+          borderRadius: context.radiusLG,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: context.colorScheme.shadow.withValues(alpha: 0.10),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : null,
         ),
-        icon: assetPath == null
-            ? Icon(icon, size: 20)
-            : SvgPicture.asset(
-                assetPath!,
-                width: 20,
-                height: 20,
-                colorFilter: ColorFilter.mode(
-                  isSelected
-                      ? context.colorScheme.onPrimary
-                      : context.colorScheme.onSurfaceVariant,
-                  BlendMode.srcIn,
-                ),
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          style: IconButton.styleFrom(
+            backgroundColor: isSelected
+                ? context.colorScheme.surfaceContainerLowest.withValues(
+                    alpha: 0.72,
+                  )
+                : Colors.transparent,
+            foregroundColor: foreground,
+            shape: RoundedRectangleBorder(
+              borderRadius: context.radiusLG,
+              side: BorderSide(
+                color: isSelected
+                    ? context.colorScheme.primary.withValues(alpha: 0.18)
+                    : Colors.transparent,
               ),
+            ),
+          ),
+          icon: assetPath == null
+              ? Icon(icon, size: 22)
+              : SvgPicture.asset(
+                  assetPath!,
+                  width: 21,
+                  height: 21,
+                  colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
+                ),
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habi/config/theme/app_theme.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/airbnb/airbnb_reservation_store.dart';
@@ -81,26 +82,30 @@ class _AirBnbPageState extends State<AirBnbPage> {
         Row(
           spacing: AppConstants.spacingMD,
           children: [
-            _MetricCard(
+            MetricCard(
               label: 'Reservations',
               value: reservations.length.toString(),
-              icon: Icons.event_available,
+              icon: Icons.event_available_rounded,
+              color: context.colorScheme.primary,
             ).expanded(),
-            _MetricCard(
+            MetricCard(
               label: 'Nights booked',
               value: AirbnbReservationStore.totalNights.toString(),
-              icon: Icons.bed,
+              icon: Icons.bed_rounded,
+              color: context.colorScheme.tertiary,
             ).expanded(),
-            _MetricCard(
+            MetricCard(
               label: 'Expected payout',
               value: _formatCurrency(AirbnbReservationStore.totalAmount),
-              icon: Icons.payments,
+              icon: Icons.payments_rounded,
+              color: context.colorScheme.info,
             ).expanded(),
-            _MetricCard(
+            MetricCard(
               label: 'Avg. stay',
               value:
                   '${AirbnbReservationStore.averageStay.toStringAsFixed(1)}n',
-              icon: Icons.timeline,
+              icon: Icons.timeline_rounded,
+              color: context.colorScheme.warning,
             ).expanded(),
           ],
         ),
@@ -109,55 +114,54 @@ class _AirBnbPageState extends State<AirBnbPage> {
             spacing: AppConstants.spacingMD,
             children: [
               GlassContainer(
-                child: Padding(
-                  padding: context.paddingLG,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Upcoming Reservations',
-                                  style: context.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        color: context.colorScheme.secondary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                isElevated: true,
+                padding: context.paddingLG,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Upcoming Reservations',
+                                style: context.textTheme.headlineSmall
+                                    ?.copyWith(
+                                      color: context.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
+                              context.gapXS,
+                              Text(
+                                'Imported from Airbnb pending reservations',
+                                style: context.textTheme.bodyMedium?.copyWith(
+                                  color: context.colorScheme.onSurfaceVariant,
                                 ),
-                                context.gapXS,
-                                Text(
-                                  'Imported from Airbnb pending reservations',
-                                  style: context.textTheme.bodyMedium?.copyWith(
-                                    color: context.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Icon(
-                            Icons.home_work,
-                            color: context.colorScheme.secondary,
-                          ),
-                        ],
-                      ),
-                      context.gapLG,
-                      Expanded(
-                        child: ListView.separated(
-                          itemCount: reservations.length,
-                          separatorBuilder: (_, _) => context.gapSM,
-                          itemBuilder: (context, index) {
-                            return _ReservationTile(
-                              reservation: reservations[index],
-                            );
-                          },
                         ),
+                        Icon(
+                          Icons.home_work_rounded,
+                          color: context.colorScheme.primary,
+                        ),
+                      ],
+                    ),
+                    context.gapLG,
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: reservations.length,
+                        separatorBuilder: (_, _) => context.gapSM,
+                        itemBuilder: (context, index) {
+                          return _ReservationTile(
+                            reservation: reservations[index],
+                          );
+                        },
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ).expanded(flex: 2),
               Column(
@@ -190,65 +194,6 @@ class _AirBnbPageState extends State<AirBnbPage> {
   }
 }
 
-class _MetricCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassContainer(
-      child: Padding(
-        padding: context.paddingMD,
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: context.colorScheme.secondary.withValues(alpha: 0.16),
-                borderRadius: context.radiusSM,
-              ),
-              child: Icon(icon, color: context.colorScheme.secondary),
-            ),
-            context.gapSM,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.titleLarge?.copyWith(
-                      color: context.colorScheme.secondary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ReservationTile extends StatelessWidget {
   final AirbnbReservation reservation;
 
@@ -257,108 +202,118 @@ class _ReservationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      child: Padding(
-        padding: context.paddingMD,
-        child: Row(
-          children: [
-            Container(
-              width: 62,
-              height: 62,
-              decoration: BoxDecoration(
-                color: context.colorScheme.primary.withValues(alpha: 0.24),
-                borderRadius: context.radiusSM,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _monthLabel(reservation.checkIn),
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: context.colorScheme.secondary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    reservation.checkIn.day.toString(),
-                    style: context.textTheme.titleLarge?.copyWith(
-                      color: context.colorScheme.secondary,
-                      fontWeight: FontWeight.bold,
-                    ),
+      padding: context.paddingMD,
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 68,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  context.colorScheme.primary.withValues(alpha: 0.18),
+                  context.colorScheme.surfaceContainerLowest.withValues(
+                    alpha: 0.48,
                   ),
                 ],
               ),
-            ),
-            context.gapMD,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    reservation.guest,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.titleMedium?.copyWith(
-                      color: context.colorScheme.secondary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  context.gapXS,
-                  Text(
-                    reservation.listing,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  context.gapSM,
-                  Wrap(
-                    spacing: AppConstants.spacingSM,
-                    runSpacing: AppConstants.spacingXS,
-                    children: [
-                      _ReservationMeta(
-                        icon: Icons.login,
-                        label: _formatDate(reservation.checkIn),
-                      ),
-                      _ReservationMeta(
-                        icon: Icons.logout,
-                        label: _formatDate(reservation.checkOut),
-                      ),
-                      _ReservationMeta(
-                        icon: Icons.nights_stay,
-                        label: '${reservation.nights} nights',
-                      ),
-                      _ReservationMeta(
-                        icon: Icons.confirmation_number,
-                        label: reservation.confirmationCode,
-                      ),
-                    ],
-                  ),
-                ],
+              borderRadius: context.radiusLG,
+              border: Border.all(
+                color: context.colorScheme.primary.withValues(alpha: 0.14),
               ),
             ),
-            context.gapMD,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  reservation.currency,
+                  _monthLabel(reservation.checkIn),
                   style: context.textTheme.labelSmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
+                    color: context.colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  reservation.amount.toStringAsFixed(2),
-                  style: context.textTheme.titleMedium?.copyWith(
-                    color: context.colorScheme.secondary,
-                    fontWeight: FontWeight.bold,
+                  reservation.checkIn.day.toString(),
+                  style: context.textTheme.titleLarge?.copyWith(
+                    color: context.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          context.gapMD,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reservation.guest,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: context.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                context.gapXS,
+                Text(
+                  reservation.listing,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                context.gapSM,
+                Wrap(
+                  spacing: AppConstants.spacingSM,
+                  runSpacing: AppConstants.spacingXS,
+                  children: [
+                    _ReservationMeta(
+                      icon: Icons.login,
+                      label: _formatDate(reservation.checkIn),
+                    ),
+                    _ReservationMeta(
+                      icon: Icons.logout,
+                      label: _formatDate(reservation.checkOut),
+                    ),
+                    _ReservationMeta(
+                      icon: Icons.nights_stay,
+                      label: '${reservation.nights} nights',
+                    ),
+                    _ReservationMeta(
+                      icon: Icons.confirmation_number,
+                      label: reservation.confirmationCode,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          context.gapMD,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                reservation.currency,
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                reservation.amount.toStringAsFixed(2),
+                style: context.textTheme.titleMedium?.copyWith(
+                  color: context.colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -374,64 +329,63 @@ class _NextStayPanel extends StatelessWidget {
     final reservation = this.reservation;
 
     return GlassContainer(
-      child: Padding(
-        padding: context.paddingLG,
-        child: reservation == null
-            ? Center(
-                child: Text(
-                  'No upcoming stays',
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              )
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Next Check-in',
-                      style: context.textTheme.titleLarge?.copyWith(
-                        color: context.colorScheme.secondary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    context.gapMD,
-                    Text(
-                      _formatDate(reservation.checkIn),
-                      style: context.textTheme.headlineSmall?.copyWith(
-                        color: context.colorScheme.secondary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    context.gapSM,
-                    Text(
-                      reservation.guest,
-                      style: context.textTheme.titleMedium?.copyWith(
-                        color: context.colorScheme.secondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    context.gapXS,
-                    Text(
-                      '${reservation.nights} nights',
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    context.gapMD,
-                    _DetailLine(
-                      label: 'Check-out',
-                      value: _formatDate(reservation.checkOut),
-                    ),
-                    _DetailLine(
-                      label: 'Booked',
-                      value: _formatDate(reservation.bookingDate),
-                    ),
-                  ],
+      isElevated: true,
+      padding: context.paddingLG,
+      child: reservation == null
+          ? Center(
+              child: Text(
+                'No upcoming stays',
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
                 ),
               ),
-      ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Next Check-in',
+                    style: context.textTheme.titleLarge?.copyWith(
+                      color: context.colorScheme.onSurface,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  context.gapMD,
+                  Text(
+                    _formatDate(reservation.checkIn),
+                    style: context.textTheme.headlineSmall?.copyWith(
+                      color: context.colorScheme.onSurface,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  context.gapSM,
+                  Text(
+                    reservation.guest,
+                    style: context.textTheme.titleMedium?.copyWith(
+                      color: context.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  context.gapXS,
+                  Text(
+                    '${reservation.nights} nights',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  context.gapMD,
+                  _DetailLine(
+                    label: 'Check-out',
+                    value: _formatDate(reservation.checkOut),
+                  ),
+                  _DetailLine(
+                    label: 'Booked',
+                    value: _formatDate(reservation.bookingDate),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -454,63 +408,59 @@ class _StayTodoPanel extends StatelessWidget {
     final completedCount = tasks.where((task) => task.isDone).length;
 
     return GlassContainer(
-      child: Padding(
-        padding: context.paddingLG,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Stay Todos',
-                    style: context.textTheme.titleLarge?.copyWith(
-                      color: context.colorScheme.secondary,
-                      fontWeight: FontWeight.bold,
-                    ),
+      isElevated: true,
+      padding: context.paddingLG,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Stay Todos',
+                  style: context.textTheme.titleLarge?.copyWith(
+                    color: context.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                Text(
-                  '$completedCount/${tasks.length}',
-                  style: context.textTheme.labelLarge?.copyWith(
-                    color: context.colorScheme.secondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            context.gapMD,
-            Row(
-              children: [
-                _PhaseButton(
-                  label: 'Before',
-                  isSelected: selectedPhase == _StayTaskPhase.beforeCheckIn,
-                  onPressed: () => onPhaseChanged(_StayTaskPhase.beforeCheckIn),
-                ).expanded(),
-                context.gapSM,
-                _PhaseButton(
-                  label: 'After',
-                  isSelected: selectedPhase == _StayTaskPhase.afterCheckOut,
-                  onPressed: () => onPhaseChanged(_StayTaskPhase.afterCheckOut),
-                ).expanded(),
-              ],
-            ),
-            context.gapMD,
-            Expanded(
-              child: ListView.separated(
-                itemCount: tasks.length,
-                separatorBuilder: (_, _) => context.gapSM,
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return _StayTodoTile(
-                    task: task,
-                    onTap: () => onTaskToggled(task),
-                  );
-                },
               ),
+              StatusChip(
+                label: '$completedCount/${tasks.length}',
+                color: context.colorScheme.tertiary,
+              ),
+            ],
+          ),
+          context.gapMD,
+          Row(
+            children: [
+              _PhaseButton(
+                label: 'Before',
+                isSelected: selectedPhase == _StayTaskPhase.beforeCheckIn,
+                onPressed: () => onPhaseChanged(_StayTaskPhase.beforeCheckIn),
+              ).expanded(),
+              context.gapSM,
+              _PhaseButton(
+                label: 'After',
+                isSelected: selectedPhase == _StayTaskPhase.afterCheckOut,
+                onPressed: () => onPhaseChanged(_StayTaskPhase.afterCheckOut),
+              ).expanded(),
+            ],
+          ),
+          context.gapMD,
+          Expanded(
+            child: ListView.separated(
+              itemCount: tasks.length,
+              separatorBuilder: (_, _) => context.gapSM,
+              itemBuilder: (context, index) {
+                final task = tasks[index];
+                return _StayTodoTile(
+                  task: task,
+                  onTap: () => onTaskToggled(task),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -535,10 +485,12 @@ class _PhaseButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isSelected
-              ? context.colorScheme.primary
-              : context.colorScheme.surfaceContainerHigh,
+              ? context.colorScheme.secondary
+              : context.colorScheme.surfaceContainerLowest.withValues(
+                  alpha: 0.48,
+                ),
           foregroundColor: isSelected
-              ? context.colorScheme.onPrimary
+              ? context.colorScheme.onSecondary
               : context.colorScheme.onSurfaceVariant,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: context.radiusSM),
@@ -549,7 +501,7 @@ class _PhaseButton extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: context.textTheme.labelMedium?.copyWith(
             color: isSelected
-                ? context.colorScheme.onPrimary
+                ? context.colorScheme.onSecondary
                 : context.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
           ),
@@ -568,52 +520,50 @@ class _StayTodoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
+      padding: context.paddingSM,
       child: InkWell(
         onTap: onTap,
-        borderRadius: context.radiusSM,
-        child: Padding(
-          padding: context.paddingSM,
-          child: Row(
-            children: [
-              SizedBox(
-                width: 32,
-                child: Checkbox(
-                  value: task.isDone,
-                  visualDensity: VisualDensity.compact,
-                  onChanged: (_) => onTap(),
-                ),
+        borderRadius: context.radiusXL,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 32,
+              child: Checkbox(
+                value: task.isDone,
+                visualDensity: VisualDensity.compact,
+                onChanged: (_) => onTap(),
               ),
-              context.gapSM,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.secondary,
-                        fontWeight: FontWeight.w700,
-                        decoration: task.isDone
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
-                      ),
+            ),
+            context.gapSM,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: context.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      decoration: task.isDone
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
                     ),
-                    context.gapXS,
-                    Text(
-                      task.note,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  context.gapXS,
+                  Text(
+                    task.note,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -643,7 +593,7 @@ class _DetailLine extends StatelessWidget {
           Text(
             value,
             style: context.textTheme.bodyMedium?.copyWith(
-              color: context.colorScheme.secondary,
+              color: context.colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -661,18 +611,10 @@ class _ReservationMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: context.colorScheme.onSurfaceVariant),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: context.textTheme.bodySmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
+    return StatusChip(
+      label: label,
+      icon: icon,
+      color: context.colorScheme.onSurfaceVariant,
     );
   }
 }
