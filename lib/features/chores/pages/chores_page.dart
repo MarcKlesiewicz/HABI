@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
+import 'package:habi/features/chores/application/chore_queries.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/features/chores/presentation/chore_visuals.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
-
-enum _ChoreView { due, todos, recurring, areas }
 
 class ChoresPage extends ConsumerStatefulWidget {
   const ChoresPage({super.key});
@@ -17,7 +16,7 @@ class ChoresPage extends ConsumerStatefulWidget {
 }
 
 class _ChoresPageState extends ConsumerState<ChoresPage> {
-  _ChoreView _view = _ChoreView.due;
+  ChoreView _view = ChoreView.due;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +29,8 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
         child: Center(child: Text('Could not load chores: $error')),
       ),
       data: (chores) {
-        final sorted = _sortChores(_choresForView(chores));
+        final visibleChores = choresForView(chores, _view);
+        final summary = summarizeChores(chores);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +43,7 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _Header(
-                    chores: chores,
+                    summary: summary,
                     onAddPressed: () => _showChoreDialog(context, ref),
                   ),
                   context.gapLG,
@@ -56,92 +56,25 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
             ),
             context.gapLG,
             Expanded(
-              child: _view == _ChoreView.areas
-                  ? _AreasList(chores: sorted)
-                  : _ChoreList(chores: sorted, view: _view),
+              child: _view == ChoreView.areas
+                  ? _AreasList(chores: visibleChores)
+                  : _ChoreList(chores: visibleChores, view: _view),
             ),
           ],
         );
       },
     );
   }
-
-  List<Chore> _choresForView(List<Chore> chores) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final comingSoon = today.add(const Duration(days: 14));
-
-    switch (_view) {
-      case _ChoreView.due:
-        return chores
-            .where((chore) {
-              if (chore.isDone) return false;
-              final due = chore.nextDue;
-              if (due == null) return false;
-              final dueDay = DateTime(due.year, due.month, due.day);
-              return dueDay.isBefore(comingSoon) ||
-                  dueDay.isAtSameMomentAs(comingSoon);
-            })
-            .toList(growable: false);
-      case _ChoreView.todos:
-        return chores
-            .where((chore) => chore.type == ChoreType.todo && !chore.isDone)
-            .toList(growable: false);
-      case _ChoreView.recurring:
-        return chores
-            .where(
-              (chore) => chore.type == ChoreType.recurring && !chore.isDone,
-            )
-            .toList(growable: false);
-      case _ChoreView.areas:
-        return chores.where((chore) => !chore.isDone).toList(growable: false);
-    }
-  }
-
-  List<Chore> _sortChores(List<Chore> chores) {
-    final sorted = List<Chore>.from(chores);
-    sorted.sort((a, b) {
-      switch (_view) {
-        case _ChoreView.due:
-        case _ChoreView.recurring:
-          return _compareNullableDates(a.nextDue, b.nextDue);
-        case _ChoreView.areas:
-          final area = a.area.compareTo(b.area);
-          return area == 0 ? _compareNullableDates(a.nextDue, b.nextDue) : area;
-        case _ChoreView.todos:
-          return b.createdAt.compareTo(a.createdAt);
-      }
-    });
-    return sorted;
-  }
 }
 
 class _Header extends StatelessWidget {
-  final List<Chore> chores;
+  final ChoreSummary summary;
   final VoidCallback onAddPressed;
 
-  const _Header({required this.chores, required this.onAddPressed});
+  const _Header({required this.summary, required this.onAddPressed});
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final comingSoon = today.add(const Duration(days: 14));
-    final dueCount = chores.where((chore) {
-      final due = chore.nextDue;
-      if (due == null || chore.isDone) {
-        return false;
-      }
-      final dueDay = DateTime(due.year, due.month, due.day);
-      return dueDay.isBefore(comingSoon) || dueDay.isAtSameMomentAs(comingSoon);
-    }).length;
-    final todoCount = chores
-        .where((chore) => chore.type == ChoreType.todo && !chore.isDone)
-        .length;
-    final recurringCount = chores
-        .where((chore) => chore.type == ChoreType.recurring)
-        .length;
-
     return Row(
       children: [
         Expanded(
@@ -157,7 +90,7 @@ class _Header extends StatelessWidget {
               ),
               context.gapXS,
               Text(
-                '$dueCount due - $todoCount todos - $recurringCount recurring',
+                '${summary.dueCount} due - ${summary.todoCount} todos - ${summary.recurringCount} recurring',
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
                 ),
@@ -176,8 +109,8 @@ class _Header extends StatelessWidget {
 }
 
 class _ViewTabs extends StatelessWidget {
-  final _ChoreView selectedView;
-  final ValueChanged<_ChoreView> onViewChanged;
+  final ChoreView selectedView;
+  final ValueChanged<ChoreView> onViewChanged;
 
   const _ViewTabs({required this.selectedView, required this.onViewChanged});
 
@@ -185,7 +118,7 @@ class _ViewTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      child: SegmentedButton<_ChoreView>(
+      child: SegmentedButton<ChoreView>(
         showSelectedIcon: false,
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
@@ -203,8 +136,8 @@ class _ViewTabs extends StatelessWidget {
             return context.colorScheme.onSurfaceVariant;
           }),
         ),
-        segments: _ChoreView.values.map((view) {
-          return ButtonSegment<_ChoreView>(
+        segments: ChoreView.values.map((view) {
+          return ButtonSegment<ChoreView>(
             value: view,
             label: Text(_viewLabel(view), overflow: TextOverflow.ellipsis),
           );
@@ -220,7 +153,7 @@ class _ViewTabs extends StatelessWidget {
 
 class _ChoreList extends StatelessWidget {
   final List<Chore> chores;
-  final _ChoreView view;
+  final ChoreView view;
 
   const _ChoreList({required this.chores, required this.view});
 
@@ -245,7 +178,7 @@ class _AreasList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (chores.isEmpty) return const _EmptyState(view: _ChoreView.areas);
+    if (chores.isEmpty) return const _EmptyState(view: ChoreView.areas);
 
     final grouped = <String, List<Chore>>{};
     for (final chore in chores) {
@@ -523,7 +456,7 @@ class _SegmentButton extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  final _ChoreView view;
+  final ChoreView view;
 
   const _EmptyState({required this.view});
 
@@ -532,10 +465,10 @@ class _EmptyState extends StatelessWidget {
     return Center(
       child: Text(
         switch (view) {
-          _ChoreView.due => 'No due chores match these filters',
-          _ChoreView.todos => 'No todos match these filters',
-          _ChoreView.recurring => 'No recurring chores match these filters',
-          _ChoreView.areas => 'No chores match these filters',
+          ChoreView.due => 'No due chores match these filters',
+          ChoreView.todos => 'No todos match these filters',
+          ChoreView.recurring => 'No recurring chores match these filters',
+          ChoreView.areas => 'No chores match these filters',
         },
         style: context.textTheme.bodyMedium?.copyWith(
           color: context.colorScheme.onSurfaceVariant,
@@ -1090,13 +1023,6 @@ void _toggleTodoDone(WidgetRef ref, Chore chore) {
   ref.read(choreControllerProvider).completeChore(chore);
 }
 
-int _compareNullableDates(DateTime? a, DateTime? b) {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return a.compareTo(b);
-}
-
 String _dateMetaLabel(Chore chore) {
   if (chore.nextDue == null) return 'No due date';
   final prefix = chore.type == ChoreType.recurring ? 'Next due' : 'Due';
@@ -1108,15 +1034,15 @@ String _formatDueDate(DateTime? date) {
   return '${date.day}/${date.month}/${date.year}';
 }
 
-String _viewLabel(_ChoreView view) {
+String _viewLabel(ChoreView view) {
   switch (view) {
-    case _ChoreView.due:
+    case ChoreView.due:
       return 'Due';
-    case _ChoreView.todos:
+    case ChoreView.todos:
       return 'Todo';
-    case _ChoreView.recurring:
+    case ChoreView.recurring:
       return 'Recurring';
-    case _ChoreView.areas:
+    case ChoreView.areas:
       return 'Area';
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habi/config/routes/routes.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
+import 'package:habi/features/chores/application/chore_queries.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/features/chores/presentation/chore_visuals.dart';
@@ -26,9 +27,7 @@ class ActiveChoresSection extends ConsumerWidget {
         ),
       ),
       data: (chores) {
-        final todayChores = _todayChores(chores);
-        final overdueChores = _overdueChores(chores);
-        final attentionCount = todayChores.length + overdueChores.length;
+        final dashboardState = dashboardChores(chores);
 
         return GlassContainer(
           isElevated: true,
@@ -48,11 +47,11 @@ class ActiveChoresSection extends ConsumerWidget {
                     ),
                   ),
                   StatusChip(
-                    label: attentionCount.toString(),
-                    color: attentionCount > 0
+                    label: dashboardState.attentionCount.toString(),
+                    color: dashboardState.attentionCount > 0
                         ? context.colorScheme.primary
                         : context.colorScheme.tertiary,
-                    emphasized: attentionCount > 0,
+                    emphasized: dashboardState.attentionCount > 0,
                   ),
                 ],
               ),
@@ -64,7 +63,7 @@ class ActiveChoresSection extends ConsumerWidget {
                 ),
               ),
               context.gapMD,
-              if (attentionCount == 0)
+              if (dashboardState.attentionCount == 0)
                 Expanded(
                   child: Center(
                     child: Text(
@@ -79,13 +78,13 @@ class ActiveChoresSection extends ConsumerWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      if (overdueChores.isNotEmpty) ...[
+                      if (dashboardState.overdue.isNotEmpty) ...[
                         _SectionLabel(
                           label: 'Overdue',
-                          count: overdueChores.length,
+                          count: dashboardState.overdue.length,
                         ),
                         context.gapSM,
-                        ...overdueChores.expand((chore) {
+                        ...dashboardState.overdue.expand((chore) {
                           return [
                             _TodayChoreTile(chore: chore, isOverdue: true),
                             context.gapSM,
@@ -93,13 +92,13 @@ class ActiveChoresSection extends ConsumerWidget {
                         }),
                         context.gapSM,
                       ],
-                      if (todayChores.isNotEmpty) ...[
+                      if (dashboardState.today.isNotEmpty) ...[
                         _SectionLabel(
                           label: 'Today',
-                          count: todayChores.length,
+                          count: dashboardState.today.length,
                         ),
                         context.gapSM,
-                        ...todayChores.expand((chore) {
+                        ...dashboardState.today.expand((chore) {
                           return [_TodayChoreTile(chore: chore), context.gapSM];
                         }),
                       ],
@@ -224,41 +223,6 @@ class _TodayChoreTile extends ConsumerWidget {
       ),
     );
   }
-}
-
-List<Chore> _todayChores(List<Chore> chores) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-
-  return chores
-      .where((chore) {
-        if (!_isDashboardCandidate(chore)) return false;
-        final due = chore.nextDue;
-        if (due == null) return false;
-        final dueDay = DateTime(due.year, due.month, due.day);
-        return dueDay.isAtSameMomentAs(today);
-      })
-      .toList(growable: false)
-    ..sort(_compareDue);
-}
-
-List<Chore> _overdueChores(List<Chore> chores) {
-  final now = DateTime.now();
-  return chores
-      .where((chore) {
-        if (!_isDashboardCandidate(chore)) return false;
-        return chore.isOverdue(now);
-      })
-      .toList(growable: false)
-    ..sort(_compareDue);
-}
-
-bool _isDashboardCandidate(Chore chore) {
-  return chore.isActive && !chore.isDone && chore.nextDue != null;
-}
-
-int _compareDue(Chore a, Chore b) {
-  return a.nextDue!.compareTo(b.nextDue!);
 }
 
 String _formatDue(DateTime? date) {
