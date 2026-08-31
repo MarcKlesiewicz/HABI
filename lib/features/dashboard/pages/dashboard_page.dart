@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:habi/config/theme/app_constants.dart';
-import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/dashboard/widgets/active_chores_section.dart';
 import 'package:habi/features/upcoming_events/presentation/upcoming_events_section.dart';
 
@@ -34,18 +34,38 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      spacing: AppConstants.spacingLG,
-      children: [
-        _DashboardToolbar(now: _now),
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < AppConstants.breakpointTablet;
+
+        if (compact) {
+          return ListView(
+            children: [
+              _DashboardToolbar(now: _now),
+              const SizedBox(height: AppConstants.spacingLG),
+              const SizedBox(height: 520, child: ActiveChoresSection()),
+              const SizedBox(height: AppConstants.spacingLG),
+              const SizedBox(height: 440, child: UpcomingEventsSection()),
+            ],
+          );
+        }
+
+        return Column(
           spacing: AppConstants.spacingLG,
           children: [
-            ActiveChoresSection().expanded(flex: 2),
-            UpcomingEventsSection().expanded(flex: 1),
+            _DashboardToolbar(now: _now),
+            Expanded(
+              child: Row(
+                spacing: AppConstants.spacingLG,
+                children: const [
+                  Expanded(flex: 2, child: ActiveChoresSection()),
+                  Expanded(child: UpcomingEventsSection()),
+                ],
+              ),
+            ),
           ],
-        ).expanded(),
-      ],
+        );
+      },
     );
   }
 }
@@ -57,47 +77,47 @@ class _DashboardToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingXS),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+    final theme = FTheme.of(context);
+
+    return FHeader(
+      style: (style) => style.copyWith(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.spacingXS,
+          vertical: AppConstants.spacingXS,
+        ),
+        titleTextStyle: theme.typography.xl3.copyWith(
+          color: theme.colors.foreground,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.7,
+        ),
+      ),
+      title: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Home',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.headlineLarge?.copyWith(
-                    color: context.colorScheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                context.gapXS,
-                Text(
-                  _dateLabel(now),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.titleMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const Text('Home'),
+          const SizedBox(height: AppConstants.spacingXS),
           Text(
-            _timeLabel(now),
-            style: context.textTheme.displaySmall?.copyWith(
-              color: context.colorScheme.onSurface,
-              fontWeight: FontWeight.w800,
-              height: 1,
+            _dateLabel(now),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.sm.copyWith(
+              color: theme.colors.mutedForeground,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
+      suffixes: [
+        Text(
+          _timeLabel(now),
+          style: theme.typography.xl3.copyWith(
+            color: theme.colors.foreground,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+          ),
+        ),
+      ],
     );
   }
 }

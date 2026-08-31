@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
+import 'package:habi/config/routes/routes.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/shared/widgets/sidebar_menu.dart';
 
@@ -10,73 +13,76 @@ class ShellLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFF1ECE3),
-              const Color(0xFFE7E1D8),
-              const Color(0xFFD8E2D8),
-            ],
-            stops: const [0, 0.56, 1],
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -90,
-              left: 150,
-              child: _AmbientGlow(
-                size: 360,
-                color: const Color(0xFFEFB8AD).withValues(alpha: 0.18),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 720) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: child,
+                    ),
+                  ),
+                  const _CompactNavigation(),
+                ],
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(AppConstants.spacingLG),
+              child: Row(
+                spacing: AppConstants.spacingLG,
+                children: [
+                  const SidebarMenu(),
+                  Expanded(child: child),
+                ],
               ),
-            ),
-            Positioned(
-              right: -80,
-              bottom: -120,
-              child: _AmbientGlow(
-                size: 420,
-                color: const Color(0xFFA9BFA9).withValues(alpha: 0.22),
-              ),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(AppConstants.spacingLG),
-                child: Row(
-                  spacing: AppConstants.spacingLG,
-                  children: [
-                    const SidebarMenu(),
-                    Expanded(child: child),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _AmbientGlow extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const _AmbientGlow({required this.size, required this.color});
+class _CompactNavigation extends StatelessWidget {
+  const _CompactNavigation();
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+    final path = GoRouterState.of(context).uri.path;
+    final paths = [
+      AppRoutePath.dashboard,
+      AppRoutePath.airbnb,
+      AppRoutePath.calendar,
+      AppRoutePath.chores,
+    ];
+    final selectedIndex = paths.indexOf(path).clamp(0, paths.length - 1);
+
+    return FBottomNavigationBar(
+      index: selectedIndex,
+      onChange: (index) => context.go(paths[index]),
+      children: const [
+        FBottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          label: Text('Home'),
         ),
-      ),
+        FBottomNavigationBarItem(
+          icon: Icon(Icons.bed_outlined),
+          label: Text('Airbnb'),
+        ),
+        FBottomNavigationBarItem(
+          icon: Icon(Icons.calendar_month_outlined),
+          label: Text('Calendar'),
+        ),
+        FBottomNavigationBarItem(
+          icon: Icon(Icons.cleaning_services_outlined),
+          label: Text('Chores'),
+        ),
+      ],
     );
   }
 }

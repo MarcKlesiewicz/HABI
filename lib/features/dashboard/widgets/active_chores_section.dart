@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habi/config/routes/routes.dart';
-import 'package:habi/config/theme/theme_extensions.dart';
+import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/features/chores/application/chore_queries.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/features/chores/presentation/chore_visuals.dart';
-import 'package:habi/shared/widgets/glass_container.dart';
+import 'package:habi/shared/widgets/app_card.dart';
 
 class ActiveChoresSection extends ConsumerWidget {
   const ActiveChoresSection({super.key});
@@ -17,21 +18,21 @@ class ActiveChoresSection extends ConsumerWidget {
     final choresState = ref.watch(choresProvider);
 
     return choresState.when(
-      loading: () => const GlassContainer(
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, _) => GlassContainer(
-        child: Padding(
-          padding: context.paddingMD,
-          child: Text('Could not load chores: $error'),
+      loading: () => const AppCard(child: Center(child: FCircularProgress())),
+      error: (error, _) => AppCard(
+        child: Center(
+          child: FAlert(
+            style: FAlertStyle.destructive(),
+            title: const Text('Could not load chores'),
+            subtitle: Text(error.toString()),
+          ),
         ),
       ),
       data: (chores) {
         final dashboardState = dashboardChores(chores);
+        final theme = FTheme.of(context);
 
-        return GlassContainer(
-          isElevated: true,
-          padding: context.paddingLG,
+        return AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -40,37 +41,35 @@ class ActiveChoresSection extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       'Today\'s Chores',
-                      style: context.textTheme.titleLarge?.copyWith(
-                        color: context.colorScheme.onSurface,
-                        fontWeight: FontWeight.w800,
+                      style: theme.typography.xl.copyWith(
+                        color: theme.colors.foreground,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                  StatusChip(
-                    label: dashboardState.attentionCount.toString(),
-                    color: dashboardState.attentionCount > 0
-                        ? context.colorScheme.primary
-                        : context.colorScheme.tertiary,
-                    emphasized: dashboardState.attentionCount > 0,
+                  FBadge(
+                    style: dashboardState.attentionCount > 0
+                        ? FBadgeStyle.destructive()
+                        : FBadgeStyle.secondary(),
+                    child: Text(dashboardState.attentionCount.toString()),
                   ),
                 ],
               ),
-              context.gapXS,
+              const SizedBox(height: AppConstants.spacingXS),
               Text(
                 'What needs attention today',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
                 ),
               ),
-              context.gapMD,
+              const SizedBox(height: AppConstants.spacingMD),
               if (dashboardState.attentionCount == 0)
-                Expanded(
+                const Expanded(
                   child: Center(
-                    child: Text(
-                      'No chores due today',
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
+                    child: FAlert(
+                      icon: Icon(Icons.check_circle_outline_rounded),
+                      title: Text('All clear'),
+                      subtitle: Text('No chores are due today.'),
                     ),
                   ),
                 )
@@ -82,37 +81,32 @@ class ActiveChoresSection extends ConsumerWidget {
                         _SectionLabel(
                           label: 'Overdue',
                           count: dashboardState.overdue.length,
+                          destructive: true,
                         ),
-                        context.gapSM,
-                        ...dashboardState.overdue.expand((chore) {
-                          return [
-                            _TodayChoreTile(chore: chore, isOverdue: true),
-                            context.gapSM,
-                          ];
-                        }),
-                        context.gapSM,
+                        const SizedBox(height: AppConstants.spacingSM),
+                        _TodayChoreGroup(
+                          chores: dashboardState.overdue,
+                          overdue: true,
+                        ),
+                        const SizedBox(height: AppConstants.spacingMD),
                       ],
                       if (dashboardState.today.isNotEmpty) ...[
                         _SectionLabel(
                           label: 'Today',
                           count: dashboardState.today.length,
                         ),
-                        context.gapSM,
-                        ...dashboardState.today.expand((chore) {
-                          return [_TodayChoreTile(chore: chore), context.gapSM];
-                        }),
+                        const SizedBox(height: AppConstants.spacingSM),
+                        _TodayChoreGroup(chores: dashboardState.today),
                       ],
                     ],
                   ),
                 ),
-              context.gapSM,
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => context.go(AppRoutePath.chores),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text('Open chore manager'),
-                ),
+              const SizedBox(height: AppConstants.spacingSM),
+              FButton(
+                style: FButtonStyle.outline(),
+                onPress: () => context.go(AppRoutePath.chores),
+                prefix: const Icon(Icons.arrow_forward_rounded, size: 16),
+                child: const Text('Open chore manager'),
               ),
             ],
           ),
@@ -123,103 +117,126 @@ class ActiveChoresSection extends ConsumerWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({
+    required this.label,
+    required this.count,
+    this.destructive = false,
+  });
+
   final String label;
   final int count;
-
-  const _SectionLabel({required this.label, required this.count});
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final color = destructive
+        ? theme.colors.destructive
+        : theme.colors.foreground;
+
     return Row(
       children: [
         Text(
           label,
-          style: context.textTheme.labelLarge?.copyWith(
-            color: context.colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
+          style: theme.typography.sm.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        context.gapSM,
-        Text(
-          count.toString(),
-          style: context.textTheme.bodySmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
+        const SizedBox(width: AppConstants.spacingSM),
+        FBadge(
+          style: destructive
+              ? FBadgeStyle.destructive()
+              : FBadgeStyle.secondary(),
+          child: Text(count.toString()),
         ),
       ],
     );
   }
 }
 
-class _TodayChoreTile extends ConsumerWidget {
-  final Chore chore;
-  final bool isOverdue;
+class _TodayChoreGroup extends ConsumerWidget {
+  const _TodayChoreGroup({required this.chores, this.overdue = false});
 
-  const _TodayChoreTile({required this.chore, this.isOverdue = false});
+  final List<Chore> chores;
+  final bool overdue;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GlassContainer(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color:
-                  (isOverdue
-                          ? context.colorScheme.error
-                          : chore.type == ChoreType.recurring
-                          ? recurringChoreColor(context, chore.colorKey)
-                          : context.colorScheme.primary)
-                      .withValues(alpha: 0.14),
-              borderRadius: context.radiusLG,
+    final theme = FTheme.of(context);
+
+    return FItemGroup(
+      divider: FItemDivider.full,
+      semanticsLabel: overdue ? 'Overdue chores' : 'Chores due today',
+      children: [
+        for (final chore in chores)
+          FItem(
+            title: Text(
+              chore.title,
+              style: theme.typography.base.copyWith(
+                color: theme.colors.foreground,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            child: Icon(
-              chore.type == ChoreType.recurring
-                  ? recurringChoreIcon(chore.iconKey)
-                  : Icons.task_alt,
-              size: 20,
-              color: isOverdue
-                  ? context.colorScheme.error
-                  : context.colorScheme.onSurface,
+            subtitle: Text(
+              '${chore.scheduleLabel} · ${chore.assignedTo} · ${_formatDue(chore.nextDue)}',
+              style: theme.typography.xs.copyWith(
+                color: overdue
+                    ? theme.colors.destructive
+                    : theme.colors.mutedForeground,
+                fontWeight: overdue ? FontWeight.w600 : FontWeight.w400,
+              ),
             ),
-          ),
-          context.gapSM,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  chore.title,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                context.gapXS,
-                Text(
-                  '${chore.scheduleLabel} - ${chore.assignedTo} - ${_formatDue(chore.nextDue)}',
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: isOverdue
-                        ? context.colorScheme.error
-                        : context.colorScheme.onSurfaceVariant,
-                    fontWeight: isOverdue ? FontWeight.bold : null,
-                  ),
-                ),
-              ],
+            prefix: _ChoreIcon(chore: chore, overdue: overdue),
+            details: FBadge(
+              style: FBadgeStyle.outline(),
+              child: Text(chore.area),
+            ),
+            suffix: Semantics(
+              button: true,
+              label: 'Mark ${chore.title} completed',
+              child: FButton.icon(
+                style: FButtonStyle.ghost(),
+                onPress: () =>
+                    ref.read(choreControllerProvider).completeChore(chore),
+                child: const Icon(Icons.check_rounded),
+              ),
             ),
           ),
-          StatusChip(label: chore.area, color: context.colorScheme.tertiary),
-          context.gapSM,
-          IconButton(
-            tooltip: 'Mark completed',
-            onPressed: () =>
-                ref.read(choreControllerProvider).completeChore(chore),
-            icon: const Icon(Icons.check_circle_outline_rounded),
-          ),
-        ],
+      ],
+    );
+  }
+}
+
+class _ChoreIcon extends StatelessWidget {
+  const _ChoreIcon({required this.chore, required this.overdue});
+
+  final Chore chore;
+  final bool overdue;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final accent = overdue
+        ? theme.colors.destructive
+        : chore.type == ChoreType.recurring
+        ? recurringChoreColor(context, chore.colorKey)
+        : theme.colors.primary;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: theme.style.borderRadius,
+      ),
+      child: SizedBox.square(
+        dimension: 40,
+        child: Icon(
+          chore.type == ChoreType.recurring
+              ? recurringChoreIcon(chore.iconKey)
+              : Icons.task_alt_rounded,
+          size: 19,
+          color: accent,
+        ),
       ),
     );
   }

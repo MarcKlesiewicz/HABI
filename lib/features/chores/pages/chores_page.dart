@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:habi/config/theme/app_constants.dart';
 import 'package:habi/config/theme/theme_extensions.dart';
 import 'package:habi/features/chores/application/chore_queries.dart';
 import 'package:habi/features/chores/application/chore_providers.dart';
 import 'package:habi/features/chores/data/chore_store.dart';
 import 'package:habi/features/chores/presentation/chore_visuals.dart';
+import 'package:habi/shared/widgets/app_card.dart';
 import 'package:habi/shared/widgets/glass_container.dart';
 
 class ChoresPage extends ConsumerStatefulWidget {
@@ -24,10 +26,8 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
 
     return choresState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => GlassContainer(
-        isElevated: true,
-        child: Center(child: Text('Could not load chores: $error')),
-      ),
+      error: (error, _) =>
+          AppCard(child: Center(child: Text('Could not load chores: $error'))),
       data: (chores) {
         final visibleChores = choresForView(chores, _view);
         final summary = summarizeChores(chores);
@@ -35,8 +35,7 @@ class _ChoresPageState extends ConsumerState<ChoresPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GlassContainer(
-              isElevated: true,
+            AppCard(
               padding: context.paddingLG,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -75,35 +74,45 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final title = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Chores',
-                style: context.textTheme.headlineSmall?.copyWith(
-                  color: context.colorScheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              context.gapXS,
-              Text(
-                '${summary.dueCount} due - ${summary.todoCount} todos - ${summary.recurringCount} recurring',
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+        Text(
+          'Chores',
+          style: context.textTheme.headlineSmall?.copyWith(
+            color: context.colorScheme.onSurface,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
           ),
         ),
-        FilledButton.icon(
-          onPressed: onAddPressed,
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add chore'),
+        context.gapXS,
+        Text(
+          '${summary.dueCount} due · ${summary.todoCount} todos · ${summary.recurringCount} recurring',
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
+    );
+    final button = FButton(
+      onPress: onAddPressed,
+      mainAxisSize: MainAxisSize.min,
+      prefix: const Icon(Icons.add, size: 18),
+      child: const Text('Add chore'),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) => constraints.maxWidth < 520
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [title, context.gapMD, button],
+            )
+          : Row(
+              children: [
+                Expanded(child: title),
+                button,
+              ],
+            ),
     );
   }
 }
@@ -116,36 +125,53 @@ class _ViewTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: SegmentedButton<ChoreView>(
-        showSelectedIcon: false,
-        style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return context.colorScheme.secondary;
-            }
-            return context.colorScheme.surfaceContainerLowest.withValues(
-              alpha: 0.46,
-            );
-          }),
-          foregroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return context.colorScheme.onSecondary;
-            }
-            return context.colorScheme.onSurfaceVariant;
-          }),
-        ),
-        segments: ChoreView.values.map((view) {
-          return ButtonSegment<ChoreView>(
-            value: view,
-            label: Text(_viewLabel(view), overflow: TextOverflow.ellipsis),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final buttons = ChoreView.values
+            .map(
+              (view) => _ViewTabButton(
+                view: view,
+                isSelected: selectedView == view,
+                onPressed: () => onViewChanged(view),
+              ),
+            )
+            .toList();
+
+        if (constraints.maxWidth < 600) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(spacing: AppConstants.spacingSM, children: buttons),
           );
-        }).toList(),
-        selected: {selectedView},
-        onSelectionChanged: (selection) {
-          onViewChanged(selection.first);
-        },
+        }
+
+        return Row(
+          spacing: AppConstants.spacingSM,
+          children: buttons.map((button) => Expanded(child: button)).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _ViewTabButton extends StatelessWidget {
+  const _ViewTabButton({
+    required this.view,
+    required this.isSelected,
+    required this.onPressed,
+  });
+
+  final ChoreView view;
+  final bool isSelected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 128,
+      child: FButton(
+        style: isSelected ? FButtonStyle.primary() : FButtonStyle.outline(),
+        onPress: onPressed,
+        child: Text(_viewLabel(view)),
       ),
     );
   }
@@ -238,7 +264,7 @@ class _ChoreTile extends ConsumerWidget {
     final isTodo = chore.type != ChoreType.recurring;
     final overdue = chore.isOverdue(DateTime.now());
 
-    return GlassContainer(
+    return AppCard(
       padding: context.paddingMD,
       child: Row(
         children: [
@@ -280,30 +306,24 @@ class _ChoreTile extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        chore.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          color: context.colorScheme.secondary,
-                          fontWeight: FontWeight.w800,
-                          decoration: chore.isDone
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                        ),
-                      ),
-                    ),
-                    _TypePill(chore: chore),
-                  ],
+                Text(
+                  chore.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: context.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                    decoration: chore.isDone
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                  ),
                 ),
                 context.gapSM,
                 Wrap(
                   spacing: AppConstants.spacingSM,
                   runSpacing: AppConstants.spacingXS,
                   children: [
+                    _TypePill(chore: chore),
                     _ChoreMeta(icon: Icons.place, label: chore.area),
                     _ChoreMeta(icon: Icons.person, label: chore.assignedTo),
                     _ChoreMeta(
