@@ -8,7 +8,10 @@ import 'package:habi/shared/widgets/shell_layout.dart';
 final router = GoRouter(
   routes: [
     ShellRoute(
-      builder: (context, state, child) => ShellLayout(child: child),
+      builder: (context, state, child) => ShellLayout(
+        title: AppRoutePath.titleFor(state.uri.path),
+        child: child,
+      ),
       routes: [
         GoRoute(
           path: AppRoutePath.dashboard,
@@ -36,4 +39,12 @@ class AppRoutePath {
   static const String airbnb = '/airbnb';
   static const String calendar = '/calendar';
   static const String chores = '/chores';
+
+  static String titleFor(String path) => switch (path) {
+    dashboard => 'Home',
+    airbnb => 'Airbnb',
+    calendar => 'Calendar',
+    chores => 'Chores',
+    _ => 'Habi',
+  };
 }

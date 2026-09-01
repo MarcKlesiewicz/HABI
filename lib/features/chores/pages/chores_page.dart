@@ -78,15 +78,6 @@ class _Header extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Chores',
-          style: context.textTheme.headlineSmall?.copyWith(
-            color: context.colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
-          ),
-        ),
-        context.gapXS,
-        Text(
           '${summary.dueCount} due · ${summary.todoCount} todos · ${summary.recurringCount} recurring',
           style: context.textTheme.bodyMedium?.copyWith(
             color: context.colorScheme.onSurfaceVariant,
